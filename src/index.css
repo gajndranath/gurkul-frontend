@@ -1,0 +1,91 @@
+/*
+  index.css — Tailwind-first, clean, and ready for custom theming
+  ---------------------------------------------------------------
+  - All theme, color, and breakpoint customizations should be done in tailwind.config.js (not CSS) for Tailwind v3+.
+  - Use Tailwind utility classes for all layout, color, and typography in your components and layouts.
+  - For dark/light/system theme toggling, use a JS snippet in your app entrypoint (see below).
+  - Mobile-first: always use base classes for mobile, add breakpoints for larger screens (sm:, md:, lg:, xl:, 2xl:, etc.).
+  - Use Tailwind's typography plugin for prose classes if needed.
+*/
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+  System theme support (add this JS in your app for 3-way theme toggle):
+  document.documentElement.classList.toggle(
+    "dark",
+    localStorage.theme === "dark" || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+  );
+*/
+
+:root {
+  --primary-foreground: oklch(0.985 0 0);
+}
+
+/* frontend/src/index.css */
+
+/* ✅ Custom Scrollbar - Premium Design */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 20px;
+  margin: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Hide scrollbar when not scrolling (optional) */
+.custom-scrollbar:not(:hover)::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.1);
+}
+
+/* ✅ Firefox scrollbar (already handled by scrollbar-width/color above) */
+
+/* ✅ Card-specific scrollbar fix */
+.overflow-y-auto,
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.2) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 20px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.2);
+  border-radius: 20px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.4);
+}
