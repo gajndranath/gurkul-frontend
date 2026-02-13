@@ -12,6 +12,7 @@ import type {
   DueRecord,
   DueSummaryStats,
   DueFilters,
+  FeeDashboardDetail,
 } from "../types/fee.types";
 
 interface UseDueTrackingReturn {
@@ -30,8 +31,8 @@ export const useDueTracking = (): UseDueTrackingReturn => {
     if (!data?.details) return [];
 
     const records = data.details
-      .filter((item) => item.status === "DUE")
-      .map((item) => {
+      .filter((item: FeeDashboardDetail) => item.status === "DUE")
+      .map((item: FeeDashboardDetail) => {
         const daysOverdue = calculateDaysOverdue(item.month, item.year);
         const urgency = getUrgencyLevel(daysOverdue);
 

@@ -1,5 +1,13 @@
 import React from "react";
-import { Input, Select } from "../../../../../components/ui";
+import { Controller } from "react-hook-form";
+import { Input } from "../../../../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../../../components/ui/select";
 import {
   LayoutGrid,
   Armchair,
@@ -12,6 +20,7 @@ import type {
   UseFormRegister,
   FieldErrors,
   UseFormSetValue,
+  Control,
 } from "react-hook-form";
 
 import type { StudentFormValues } from "../type/AdminStudentForm.types";
@@ -32,6 +41,7 @@ interface LibraryInfoSectionProps {
   register: UseFormRegister<StudentFormValues>;
   errors: FieldErrors<StudentFormValues>;
   setValue: UseFormSetValue<StudentFormValues>;
+  control: Control<StudentFormValues>; // Added control for Shadcn Select
   slotsData: { data: Slot[] } | undefined;
   selectedSlotId: string;
 }
@@ -40,33 +50,64 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
   register,
   errors,
   setValue,
+  control,
   slotsData,
   selectedSlotId,
 }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {/* Slot Selection */}
+        {/* Slot Selection - Pure Shadcn UI */}
         <div className="space-y-2">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5">
             <LayoutGrid size={12} className="text-blue-500" /> Operational Slot{" "}
             <span className="text-rose-500">*</span>
           </label>
-          <Select
-            options={
-              Array.isArray(slotsData?.data)
-                ? slotsData.data.map((slot: Slot) => ({
-                    value: slot._id,
-                    label: slot.name,
-                  }))
-                : []
-            }
-            value={selectedSlotId || ""}
-            onChange={(e) =>
-              setValue("slotId", e.target.value, { shouldValidate: true })
-            }
-            className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold focus:ring-2 focus:ring-blue-600/10 transition-all shadow-sm"
+
+          <Controller
+            control={control}
+            name="slotId"
+            render={({ field }) => (
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  // Manually sync monthly fee if needed on change
+                  const selectedSlot = slotsData?.data.find(
+                    (s) => s._id === value,
+                  );
+                  if (selectedSlot?.monthlyFee) {
+                    setValue("monthlyFee", selectedSlot.monthlyFee, {
+                      shouldValidate: true,
+                    });
+                  }
+                }}
+                value={field.value}
+              >
+                <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold focus:ring-2 focus:ring-blue-600/10 transition-all shadow-sm">
+                  <SelectValue placeholder="Select a slot" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                  {Array.isArray(slotsData?.data) &&
+                  slotsData.data.length > 0 ? (
+                    slotsData.data.map((slot) => (
+                      <SelectItem
+                        key={slot._id}
+                        value={slot._id}
+                        className="font-bold py-3 focus:bg-blue-50 focus:text-blue-600 rounded-lg"
+                      >
+                        {slot.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-4 text-xs font-bold text-slate-400 text-center">
+                      No slots available
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            )}
           />
+
           {errors.slotId && (
             <p className="text-rose-500 text-[10px] font-bold ml-1">
               {errors.slotId.message}
@@ -152,7 +193,7 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
                   Active Slot Snapshot
                 </h4>
               </div>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+              <div className="grid grid-cols-2 gap-y-4 gap-x-6 border-none">
                 <div className="space-y-1">
                   <p className="text-[8px] font-bold text-slate-500 uppercase flex items-center gap-1">
                     <Clock size={10} /> Timing

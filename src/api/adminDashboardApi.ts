@@ -80,6 +80,7 @@ export interface DueStudent {
 export interface DueSummaryResponse {
   month: number;
   year: number;
+  totalDues: number;
   totalDueStudents: number;
   students: DueStudent[];
   totalDueAmount: number;

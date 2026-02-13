@@ -51,6 +51,12 @@ import { useDebounce } from "../../../hooks/useDebounce";
 import { getStudents, archiveStudent } from "../../../api/studentsApi";
 import { getAllSlots } from "../../../api/slotApi";
 import type { Student } from "./types";
+import {
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Slot = {
   _id: string;
@@ -104,7 +110,7 @@ const AdminStudentsListPage: React.FC = () => {
         slotId: slotFilter !== "ALL" ? slotFilter : undefined,
       };
       const res = await getStudents(params);
-      return res.data;
+      return res;
     },
   });
 
@@ -130,7 +136,7 @@ const AdminStudentsListPage: React.FC = () => {
     queryKey: ["students", "ALL_FOR_STATS"],
     queryFn: async () => {
       const res = await getStudents({ limit: 10000 });
-      return res.data;
+      return res;
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -268,31 +274,44 @@ const AdminStudentsListPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Select
-            value={slotFilter}
-            onChange={(e) => setSlotFilter(e.target.value)}
-            options={[
-              { value: "ALL", label: "All Slots" },
-              ...(Array.isArray(slotsData)
-                ? (slotsData as Slot[]).map((s) => ({
-                    value: s._id,
-                    label: s.name,
-                  }))
-                : []),
-            ]}
-            className="h-12 w-full sm:w-[180px] rounded-xl shadow-sm"
-          />
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            options={[
-              { value: "ALL", label: "All Status" },
-              { value: "ACTIVE", label: "Active" },
-              { value: "INACTIVE", label: "Inactive" },
-              { value: "ARCHIVED", label: "Archived" },
-            ]}
-            className="h-12 w-full sm:w-[150px] rounded-xl shadow-sm"
-          />
+          {/* Slot Filter */}
+          <Select value={slotFilter} onValueChange={setSlotFilter}>
+            <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-xl shadow-sm font-medium border-slate-200 bg-white">
+              <SelectValue placeholder="Select Slot" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+              <SelectItem value="ALL" className="rounded-lg">
+                All Slots
+              </SelectItem>
+              {Array.isArray(slotsData) &&
+                (slotsData as Slot[]).map((s) => (
+                  <SelectItem key={s._id} value={s._id} className="rounded-lg">
+                    {s.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+
+          {/* Status Filter */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-12 w-full sm:w-[150px] rounded-xl shadow-sm font-medium border-slate-200 bg-white">
+              <SelectValue placeholder="Select Status" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+              <SelectItem value="ALL" className="rounded-lg">
+                All Status
+              </SelectItem>
+              <SelectItem value="ACTIVE" className="rounded-lg">
+                Active
+              </SelectItem>
+              <SelectItem value="INACTIVE" className="rounded-lg">
+                Inactive
+              </SelectItem>
+              <SelectItem value="ARCHIVED" className="rounded-lg">
+                Archived
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </section>
 

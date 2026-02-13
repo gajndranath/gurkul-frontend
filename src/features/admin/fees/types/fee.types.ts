@@ -47,6 +47,16 @@ export interface StudentFeeSummary {
   } | null;
 }
 
+export interface FeeDashboardDetail {
+  studentId: string;
+  studentName: string;
+  studentStatus: string;
+  month: number;
+  year: number;
+  totalAmount: number;
+  status: FeeStatus;
+}
+
 export interface DashboardPaymentStatus {
   stats: {
     total: number;
@@ -66,6 +76,7 @@ export interface DashboardPaymentStatus {
     year: number;
     totalAmount: number;
     status: FeeStatus;
+    details: FeeDashboardDetail[];
   }>;
 }
 export interface FeeSummaryResponse {

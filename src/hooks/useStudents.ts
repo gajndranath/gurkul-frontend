@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { getStudents } from "../api/studentsApi";
+// Import the specific params type here
+import type { GetStudentsParams } from "../api/studentsApi";
 import type { StudentListResponse } from "../features/students/types";
 
-export const useStudents = () => {
+export const useStudents = (params?: GetStudentsParams) => {
   return useQuery<StudentListResponse, Error>({
-    queryKey: ["students"],
-    queryFn: getStudents,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    // cacheTime is not a valid option in v5, so remove it
+    // Adding params to the queryKey ensures the cache refreshes when filters change
+    queryKey: ["students", params],
+    queryFn: () => getStudents(params),
+    staleTime: 1000 * 60 * 5,
   });
 };

@@ -6,11 +6,15 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  Button,
-  Badge,
+} from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import {
   Dialog,
   DialogContent,
-} from "../../components/ui";
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import {
   Tabs,
   TabsList,
@@ -18,137 +22,113 @@ import {
   TabsContent,
 } from "../../components/ui/tabs";
 import { useToast } from "../../hooks/useToast";
-import {
-  getStudent,
-  archiveStudent,
-  reactivateStudent,
-} from "../../api/studentsApi";
+import { getStudent, archiveStudent } from "../../api/studentsApi";
+import type { Student } from "./types";
 
 const StudentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { success, error: toastError } = useToast();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState("overview");
-  const [archiveDialog, setArchiveDialog] = useState(false);
-  const [reactivateDialog, setReactivateDialog] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
-  // Fetch student details
-  const { data: studentData, isLoading } = useQuery({
+  const { data: student, isLoading } = useQuery<Student>({
     queryKey: ["student", id],
     queryFn: () => getStudent(id!),
+    enabled: !!id,
   });
 
-  // ...existing code...
-
-  // Archive mutation
   const archiveMutation = useMutation({
-    mutationFn: async () => {
-      await archiveStudent(id!, "Archived from detail page");
-    },
+    mutationFn: () => archiveStudent(id!, "Standard Archive"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["student", id] });
-      toast.success("Student archived successfully");
-      setArchiveDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      success("Student archived");
+      setArchiveOpen(false);
       navigate("/students");
     },
-    onError: (error: unknown) => {
-      toast.error((error as Error).message || "Failed to archive student");
-    },
+    onError: (err: Error) => toastError(err.message),
   });
 
-  // Reactivate mutation
-  const reactivateMutation = useMutation({
-    mutationFn: async () => {
-      await reactivateStudent(id!);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["student", id] });
-      toast.success("Student reactivated successfully");
-      setReactivateDialog(false);
-    },
-    onError: (error: unknown) => {
-      toast.error((error as Error).message || "Failed to reactivate student");
-    },
-  });
-
-  if (isLoading) return <div className="p-4">Loading student...</div>;
-  if (!studentData)
-    return <div className="p-4 text-gray-400">Student not found.</div>;
-
-  const student = studentData;
+  if (isLoading)
+    return <div className="p-8 text-center">Loading details...</div>;
+  if (!student) return <div className="p-8 text-center">Student not found</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6">
-      <Button variant="ghost" onClick={() => navigate("/students")}>
-        Back to Students
-      </Button>
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={() => navigate("/students")}>
+          ← Back
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/students/edit/${id}`)}
+          >
+            Edit
+          </Button>
+          <Button variant="destructive" onClick={() => setArchiveOpen(true)}>
+            Archive
+          </Button>
+        </div>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>{student.name}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-2xl">{student.name}</CardTitle>
+            <p className="text-sm text-muted-foreground">{student.email}</p>
+          </div>
           <Badge
-            variant={
-              student.status === "ACTIVE"
-                ? "default"
-                : student.status === "ARCHIVED"
-                  ? "outline"
-                  : "secondary"
-            }
+            variant={student.status === "ACTIVE" ? "default" : "secondary"}
           >
             {student.status}
           </Badge>
         </CardHeader>
         <CardContent>
-          <div>Email: {student.email}</div>
-          <div>Phone: {student.phone}</div>
-          <div>Father: {student.fatherName}</div>
-          <div>Address: {student.address}</div>
-          <div>Seat: {student.seatNumber}</div>
-          <div>
-            Slot:{" "}
-            {typeof student.slotId === "object"
-              ? student.slotId.name
-              : student.slotId}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Phone</span>
+              <span>{student.phone || "N/A"}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Slot</span>
+              <span>
+                {typeof student.slotId === "object"
+                  ? student.slotId.name
+                  : "N/A"}
+              </span>
+            </div>
           </div>
-          <div>Monthly Fee: ₹{student.monthlyFee}</div>
         </CardContent>
       </Card>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger
-            value="overview"
-            onClick={() => setActiveTab("overview")}
-          >
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="fees" onClick={() => setActiveTab("fees")}>
-            Fees
-          </TabsTrigger>
-          <TabsTrigger value="details" onClick={() => setActiveTab("details")}>
-            Details
-          </TabsTrigger>
+
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="fees">Fees</TabsTrigger>
+          <TabsTrigger value="details">Log</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" activeTab={activeTab}>
-          {<div>Overview content here</div>}
-        </TabsContent>
-        <TabsContent value="fees" activeTab={activeTab}>
-          {<div>Fee summary content here</div>}
-        </TabsContent>
-        <TabsContent value="details" activeTab={activeTab}>
-          {<div>Details content here</div>}
+        <TabsContent value="overview" className="mt-4 space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <p>Address: {student.address || "No address provided"}</p>
+              <p>Father Name: {student.fatherName || "N/A"}</p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
-      {/* Archive Dialog */}
-      <Dialog open={archiveDialog} onOpenChange={setArchiveDialog}>
+
+      <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>
         <DialogContent>
-          <div className="font-semibold mb-2">Archive Student</div>
-          <div className="mb-4">
-            Are you sure you want to archive{" "}
-            <span className="font-bold">{student.name}</span>?
-          </div>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setArchiveDialog(false)}>
+          <DialogHeader>
+            <DialogTitle>Confirm Archive</DialogTitle>
+          </DialogHeader>
+          <p>
+            Are you sure you want to archive <strong>{student.name}</strong>?
+          </p>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setArchiveOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -156,32 +136,7 @@ const StudentDetailPage: React.FC = () => {
               onClick={() => archiveMutation.mutate()}
               disabled={archiveMutation.isPending}
             >
-              Confirm
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      {/* Reactivate Dialog */}
-      <Dialog open={reactivateDialog} onOpenChange={setReactivateDialog}>
-        <DialogContent>
-          <div className="font-semibold mb-2">Reactivate Student</div>
-          <div className="mb-4">
-            Are you sure you want to reactivate{" "}
-            <span className="font-bold">{student.name}</span>?
-          </div>
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setReactivateDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              onClick={() => reactivateMutation.mutate()}
-              disabled={reactivateMutation.isPending}
-            >
-              Confirm
+              {archiveMutation.isPending ? "Archiving..." : "Confirm Archive"}
             </Button>
           </div>
         </DialogContent>

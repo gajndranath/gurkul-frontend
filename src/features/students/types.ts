@@ -49,3 +49,17 @@ export interface SingleStudentResponse {
     };
   };
 }
+
+export interface StudentNotification {
+  id: string;
+  message: string;
+  type: "INFO" | "SUCCESS" | "WARNING";
+  createdAt: string;
+}
+
+export interface StudentReminder {
+  id: string;
+  title: string;
+  dueDate: string;
+  amount?: number;
+}
