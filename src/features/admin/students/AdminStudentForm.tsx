@@ -174,6 +174,7 @@ const AdminStudentForm: React.FC = () => {
                     errors={errors}
                     setValue={setValue}
                     slotsData={slotsData}
+                    control={control}
                     selectedSlotId={selectedSlotId}
                   />
                 </CardContent>
