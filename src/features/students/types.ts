@@ -1,4 +1,14 @@
+export interface FeeHistoryItem {
+  _id: string;
+  amount: number;
+  status: "PAID" | "PENDING" | "OVERDUE" | "PARTIAL";
+  paymentDate?: string;
+  month: number;
+  year: number;
+}
+
 export interface Student {
+  _id?: string;
   id: string;
   name: string;
   email: string;
@@ -13,16 +23,29 @@ export interface Student {
   notes?: string;
   tags?: string[];
 }
-}
 
 export interface StudentListResponse {
+  students: Student[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface SingleStudentResponse {
+  success: boolean;
+  message: string;
   data: {
-    students: Student[];
-    pagination?: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
+    student: Student;
+    feeSummary: {
+      totals: {
+        totalPaid: number;
+        totalDue: number;
+        totalPending: number;
+      };
+      feeHistory: FeeHistoryItem[];
     };
   };
 }
