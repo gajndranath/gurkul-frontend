@@ -48,15 +48,16 @@ import {
 
 import { useToast } from "../../../hooks/useToast";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { getStudents, archiveStudent } from "../../../api/studentsApi";
+import { getStudents, archiveStudent } from "../../../api/studentsAdminApi";
 import { getAllSlots } from "../../../api/slotApi";
-import type { Student } from "./types";
+import type { Student, BackendResponse } from "./types";
 import {
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { StudentListResponse } from "@/features/students/types";
 
 type Slot = {
   _id: string;
@@ -89,6 +90,7 @@ const AdminStudentsListPage: React.FC = () => {
     student: null,
   });
 
+  // Inside AdminStudentsListPage
   const {
     data: studentsData,
     isLoading,
@@ -103,14 +105,19 @@ const AdminStudentsListPage: React.FC = () => {
     ],
     queryFn: async () => {
       const params = {
-        query: debouncedSearch || undefined,
+        search: debouncedSearch || undefined,
         page: currentPage,
         limit: 10,
         status: statusFilter !== "ALL" ? statusFilter : undefined,
         slotId: slotFilter !== "ALL" ? slotFilter : undefined,
       };
-      const res = await getStudents(params);
-      return res;
+
+      // getStudents returns the full axios response { data: { data: { students... } } }
+      const res = (await getStudents(
+        params,
+      )) as unknown as BackendResponse<StudentListResponse>;
+      // Return the inner 'data' property so studentsData becomes { students: [...], pagination: {} }
+      return res.data;
     },
   });
 
@@ -123,8 +130,7 @@ const AdminStudentsListPage: React.FC = () => {
   });
 
   const archiveMutation = useMutation({
-    mutationFn: (studentId: string) =>
-      archiveStudent(studentId, "Archived from list"),
+    mutationFn: (studentId: string) => archiveStudent(studentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       toast.success("Student archived successfully");

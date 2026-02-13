@@ -1,3 +1,12 @@
+export interface BackendResponse<T> {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: T; // This will hold your StudentListResponse
+  _cached?: boolean;
+  _cacheKey?: string;
+}
+
 export interface FeeHistoryItem {
   _id: string;
   amount: number;
