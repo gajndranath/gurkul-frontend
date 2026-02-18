@@ -185,20 +185,7 @@ export const useApplyAdvance = () => {
       month,
       year,
       amount,
-    }: ApplyAdvancePayload) => {
-      // ✅ TODO: Create this API endpoint on backend
-      const response = await fetch(`/api/fees/${studentId}/advance/apply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month, year, amount }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to apply advance");
-      }
-
-      return response.json();
-    },
+    }: ApplyAdvancePayload) => feeApi.applyAdvance(studentId, month, year, amount),
 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: advanceKeys.balances() });

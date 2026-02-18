@@ -83,6 +83,20 @@ export const addAdvance = async (
   return data.data;
 };
 
+export const applyAdvance = async (
+  studentId: string,
+  month: number,
+  year: number,
+  amount?: number,
+) => {
+  const { data } = await axiosInstance.post(`/fees/${studentId}/advance/apply`, {
+    month,
+    year,
+    amount,
+  });
+  return data.data;
+};
+
 export const markFeeAsDue = async (
   studentId: string,
   month: number,
