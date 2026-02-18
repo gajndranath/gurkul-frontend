@@ -19,7 +19,7 @@ import {
 } from "../../components/ui/select";
 import { useToast } from "../../hooks/useToast";
 import { useDebounce } from "../../hooks/useDebounce";
-import { getStudents, archiveStudent } from "../../api/adminStudentsApi";
+import { getStudents, archiveStudent } from "../../api/studentsAdminApi";
 import { getAllSlots } from "../../api/slotApi";
 import type { Student } from "./types";
 

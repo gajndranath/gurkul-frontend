@@ -29,7 +29,7 @@ import {
   registerStudent,
   updateStudent,
   getStudent,
-} from "../../api/adminStudentsApi";
+} from "../../api/studentsAdminApi";
 import { getAllSlots } from "../../api/slotApi";
 
 // Types
