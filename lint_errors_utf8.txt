@@ -1,0 +1,53 @@
+﻿
+D:\client\librarya\frontend\src\components\ui\button.tsx
+  64:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\client\librarya\frontend\src\components\ui\form.tsx
+  159:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\client\librarya\frontend\src\components\ui\tabs.tsx
+  89:52  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\client\librarya\frontend\src\components\ui\textarea.tsx
+  3:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+D:\client\librarya\frontend\src\config\firebase.ts
+  35:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\client\librarya\frontend\src\features\admin\attendance\api\attendanceApi.ts
+  38:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\client\librarya\frontend\src\features\admin\expenses\ExpensesPage.tsx
+  105:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  283:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\client\librarya\frontend\src\features\admin\expenses\api\expenseApi.ts
+  31:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:91  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\client\librarya\frontend\src\features\auth\api\passwordResetApi.ts
+   5:57  error  The `{}` ("empty object") type allows any non-nullish value, including literals like `0` and `""`.
+- If that's what you want, disable this lint rule with an inline comment or configure the 'allowObjectTypes' rule option.
+- If you want a type meaning "any object", you probably want `object` instead.
+- If you want a type meaning "any value", you probably want `unknown` instead  @typescript-eslint/no-empty-object-type
+  10:56  error  The `{}` ("empty object") type allows any non-nullish value, including literals like `0` and `""`.
+- If that's what you want, disable this lint rule with an inline comment or configure the 'allowObjectTypes' rule option.
+- If you want a type meaning "any object", you probably want `object` instead.
+- If you want a type meaning "any value", you probably want `unknown` instead  @typescript-eslint/no-empty-object-type
+
+D:\client\librarya\frontend\src\features\auth\components\ForgotPasswordPage.tsx
+  45:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\client\librarya\frontend\src\features\student\slots\StudentSlotRequestPage.tsx
+   83:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\client\librarya\frontend\src\hooks\useFcm.ts
+  37:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Ô£û 20 problems (20 errors, 0 warnings)
+

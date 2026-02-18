@@ -13,6 +13,12 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers = config.headers || {};
       config.headers["Authorization"] = `Bearer ${token}`;
+      
+      // Inject Tenant ID for all requests (authenticated or not, if available)
+      const tenantId = import.meta.env.VITE_TENANT_ID;
+      if (tenantId) {
+        config.headers["X-Tenant-ID"] = tenantId;
+      }
       // ...existing code...
     }
     return config;
@@ -26,6 +32,12 @@ axiosInstance.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Show toast, do NOT auto logout or redirect
       useToast().error("Session expired", "Please log in again.");
+    }
+    
+    // Handle 403 Forbidden - likely inactive account or invalid role
+    if (error.response && error.response.status === 403) {
+      useToast().error("Access Denied", "Your account may be inactive or unauthorized.");
+      useSessionStore.getState().logout();
     }
     // Optionally log error
     return Promise.reject(error);

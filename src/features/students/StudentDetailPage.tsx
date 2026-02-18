@@ -22,7 +22,7 @@ import {
   TabsContent,
 } from "../../components/ui/tabs";
 import { useToast } from "../../hooks/useToast";
-import { getStudent, archiveStudent } from "../../api/studentsApi";
+import { getStudent, archiveStudent } from "../../api/studentsAdminApi";
 import type { Student } from "./types";
 
 const StudentDetailPage: React.FC = () => {

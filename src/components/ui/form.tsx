@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable react-refresh/only-export-components */
+
 import * as React from "react"
 import type { Label as LabelPrimitive } from "radix-ui"
 import { Slot } from "radix-ui"

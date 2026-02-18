@@ -22,6 +22,12 @@ export const getAllSlots = async () => {
   return data.data; // Following your ApiResponse structure
 };
 
+// Get slot master data (can be cached on frontend too)
+export const getSlotMasterData = async () => {
+  const { data } = await axiosInstance.get("/slots/master/data");
+  return data.data;
+};
+
 export const getSlotDetails = async (slotId: string) => {
   const { data } = await axiosInstance.get(`/slots/${slotId}`);
   return data.data;

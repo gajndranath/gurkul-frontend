@@ -28,12 +28,12 @@ export const updateStudent = async (
   id: string,
   data: Partial<StudentFormData>,
 ) => {
-  const { data: result } = await axiosInstance.put(`/students/${id}`, data);
+  const { data: result } = await axiosInstance.patch(`/students/${id}`, data);
   return result;
 };
 
 export const changeSlot = async (studentId: string, slotId: string) => {
-  const { data: result } = await axiosInstance.post(
+  const { data: result } = await axiosInstance.patch(
     `/students/${studentId}/change-slot`,
     { slotId },
   );
@@ -41,22 +41,23 @@ export const changeSlot = async (studentId: string, slotId: string) => {
 };
 
 export const overrideFee = async (studentId: string, fee: number) => {
-  const { data: result } = await axiosInstance.post(
+  const { data: result } = await axiosInstance.patch(
     `/students/${studentId}/override-fee`,
     { fee },
   );
   return result;
 };
 
-export const archiveStudent = async (studentId: string) => {
-  const { data: result } = await axiosInstance.post(
+export const archiveStudent = async (studentId: string, reason?: string) => {
+  const { data: result } = await axiosInstance.patch(
     `/students/${studentId}/archive`,
+    { reason },
   );
   return result;
 };
 
 export const reactivateStudent = async (studentId: string) => {
-  const { data: result } = await axiosInstance.post(
+  const { data: result } = await axiosInstance.patch(
     `/students/${studentId}/reactivate`,
   );
   return result;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "../../../../../components/ui";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { RotateCcw, ArrowLeft, ExternalLink, Zap } from "lucide-react";
 
@@ -18,7 +18,7 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* 1. Header Label */}
+      {/* Header Label */}
       <div className="flex items-center gap-2 mb-4 opacity-80">
         <Zap size={14} className="text-blue-400" />
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
@@ -26,7 +26,7 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
         </p>
       </div>
 
-      {/* 2. Primary Detail View (Edit Mode Only) */}
+      {/* Primary Detail View (Edit Mode Only) */}
       {isEditMode && id && (
         <Button
           type="button"
@@ -39,18 +39,22 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
         </Button>
       )}
 
-      {/* 3. Reset Form */}
+      {/* Reset Form */}
       <Button
         type="button"
         variant="ghost"
         className="w-full justify-start rounded-xl text-slate-400 hover:bg-slate-800 hover:text-amber-400 h-11 gap-3 font-bold text-xs transition-all"
-        onClick={() => reset()}
+        onClick={() => {
+          if (window.confirm("Are you sure you want to clear all form data?")) {
+            reset();
+          }
+        }}
       >
         <RotateCcw size={16} />
         Clear Form Data
       </Button>
 
-      {/* 4. Cancel Navigation */}
+      {/* Cancel Navigation */}
       <Button
         type="button"
         variant="ghost"

@@ -3,8 +3,24 @@ import axiosInstance from "./axiosInstance";
 // Type for the real API response
 export type DashboardApiResponse = {
   student?: {
+    _id: string;
     name?: string;
+    libraryId?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    fatherName?: string;
+    status?: string;
+    seatNumber?: string;
+    joiningDate?: string;
     nextBillingDate?: string;
+    slot?: {
+      name?: string;
+      timeRange?: { start?: string; end?: string };
+      monthlyFee?: number;
+      totalSeats?: number;
+      isActive?: boolean;
+    };
     [key: string]: unknown;
   };
   feeSummary?: {
@@ -14,17 +30,36 @@ export type DashboardApiResponse = {
       totalPending?: number;
     };
   };
-  recentReminders?: Array<{
+  recentPayments?: Array<{
     _id: string;
-    title: string;
-    dueDate: string;
-    read: boolean;
+    month: string;
+    year: number;
+    amount: number;
+    status: string;
+    paymentDate?: string;
+    transactionId?: string;
   }>;
-  recentNotifications?: Array<{
+  dueItems?: Array<{
+    _id: string;
+    month: string;
+    year: number;
+    amount: number;
+    status: string;
+    dueDate?: string;
+  }>;
+  unreadNotifications?: Array<{
     _id: string;
     title: string;
+    message: string;
+    type: string;
     createdAt: string;
     read: boolean;
+  }>;
+  announcements?: Array<{
+    _id: string;
+    title: string;
+    body: string;
+    createdAt: string;
   }>;
   [key: string]: unknown;
 };

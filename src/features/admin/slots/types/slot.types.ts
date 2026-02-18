@@ -1,16 +1,18 @@
+export interface SlotTimeRange {
+  start: string;
+  end: string;
+}
+
 export interface Slot {
   _id: string;
   name: string;
-  timeRange: {
-    start: string;
-    end: string;
-  };
+  timeRange: SlotTimeRange;
   monthlyFee: number;
   totalSeats: number;
   isActive: boolean;
-  occupiedSeats: number;
-  availableSeats: number;
-  occupancyPercentage: number;
+  occupiedSeats?: number; // Make it optional with ?
+  availableSeats?: number; // Make these optional too if needed
+  occupancyPercentage?: number;
 }
 
 export interface SlotDetailsResponse {

@@ -33,7 +33,7 @@ import { useDueTracking } from "../hooks/useDueTracking";
 import { notificationService } from "@/features/notifications/api/notification.service";
 import { formatCurrency } from "@/lib/utils";
 import type { DueRecord } from "../types/fee.types";
-
+import ReminderHistory from "../components/ReminderHistory";
 type ChannelType = "email" | "sms" | "push" | "in-app";
 
 interface SelectedStudent {
@@ -285,6 +285,12 @@ const BulkReminderPage: React.FC = () => {
             className="rounded-xl text-[10px] font-black uppercase tracking-wider"
           >
             3. Confirm & Send
+          </TabsTrigger>
+          <TabsTrigger
+            value="history"
+            className="rounded-xl text-[10px] font-black uppercase tracking-wider"
+          >
+            3. History
           </TabsTrigger>
         </TabsList>
 
@@ -657,6 +663,10 @@ const BulkReminderPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6 mt-6">
+          <ReminderHistory />
         </TabsContent>
       </Tabs>
     </div>

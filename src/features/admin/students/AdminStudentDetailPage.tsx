@@ -45,9 +45,10 @@ import {
   getStudent,
   archiveStudent,
   reactivateStudent,
-} from "../../../api/studentsApi";
+} from "../../../api/studentsAdminApi";
 import StudentFeeLedgerWidget from "../fees/widgets/StudentFeeLedgerWidget";
 import type { SingleStudentResponse } from "./types";
+import ReminderHistory from "../fees/components/ReminderHistory";
 
 const AdminStudentDetailPage: React.FC = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -387,7 +388,7 @@ const AdminStudentDetailPage: React.FC = () => {
                 {/* Tabs Container: Full width on mobile, auto width on desktop */}
                 <TabsList
                   className="
-    grid grid-cols-3 w-full /* Mobile: 3 equal columns */
+    grid grid-cols-4 w-full /* Mobile: 3 equal columns */
     sm:flex sm:w-auto /* Desktop: Back to flex */
     bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50 backdrop-blur-sm 
     h-auto /* Ensures list grows with content */
@@ -434,6 +435,21 @@ const AdminStudentDetailPage: React.FC = () => {
                   >
                     Activity
                   </TabsTrigger>
+
+                  <TabsTrigger
+                    value="history"
+                    className="
+        rounded-xl py-2.5 
+        px-2 sm:px-6 /* Tight padding on mobile, generous on desktop */
+        text-[10px] sm:text-xs /* Smaller text on tiny screens */
+        font-black uppercase tracking-widest transition-all
+        data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md 
+        data-[state=inactive]:text-slate-400
+      "
+                  >
+                    <span className="sm:hidden">History</span>
+                    <span className="hidden sm:inline">Reminder History</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* Status indicator: Pushed below tabs on mobile */}
@@ -454,19 +470,19 @@ const AdminStudentDetailPage: React.FC = () => {
                   {[
                     {
                       label: "Total Paid",
-                      val: feeSummary.totals.totalPaid,
+                      val: feeSummary?.totals?.totalPaid || 0,
                       color: "text-emerald-600",
                       bg: "bg-emerald-50/50",
                     },
                     {
                       label: "Total Due",
-                      val: feeSummary.totals.totalDue,
+                      val: feeSummary?.totals?.totalDue || 0,
                       color: "text-rose-600",
                       bg: "bg-rose-50/50",
                     },
                     {
                       label: "Pending",
-                      val: feeSummary.totals.totalPending,
+                      val: feeSummary?.totals?.totalPending || 0,
                       color: "text-amber-600",
                       bg: "bg-amber-50/50",
                     },
@@ -555,6 +571,11 @@ const AdminStudentDetailPage: React.FC = () => {
                     There are currently no administrative events or status
                     changes recorded for this profile.
                   </p>
+                </div>
+              </TabsContent>
+              <TabsContent value="history" className="outline-none">
+                <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+                  <ReminderHistory studentId={studentId} limit={50} />
                 </div>
               </TabsContent>
             </Tabs>

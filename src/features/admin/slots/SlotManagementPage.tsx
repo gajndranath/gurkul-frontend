@@ -1,15 +1,27 @@
+// frontend/src/features/admin/slots/SlotManagementPage.tsx
 import React, { useState, useMemo, lazy, Suspense } from "react";
-import { Loader2, Plus, Search, Layers, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Search,
+  Layers,
+  ShieldCheck,
+  AlertCircle,
+} from "lucide-react";
 import { useSlots } from "./hooks/useSlots";
 import SlotCardWidget from "./widgets/SlotCardWidget";
-import { Button, Input } from "../../../components/ui";
-import { Separator } from "../../../components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { Slot } from "./types/slot.types";
 
 const SlotFormModal = lazy(() => import("./widgets/SlotFormModal"));
 
 const SlotManagementPage: React.FC = () => {
-  const { slots, isLoading } = useSlots();
+  const { slots, isLoading, isError, error, refetch } = useSlots();
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,105 +31,136 @@ const SlotManagementPage: React.FC = () => {
     );
   }, [slots, search]);
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#f8fafc] gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-          Syncing Library Grid...
-        </p>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading slots...</p>
       </div>
     );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error Loading Slots</AlertTitle>
+          <AlertDescription>
+            {error?.message || "Failed to load slots. Please try again."}
+          </AlertDescription>
+        </Alert>
+        <Button onClick={() => refetch()} variant="outline" className="mt-4">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-8 md:space-y-10 bg-[#f8fafc] min-h-screen animate-in fade-in duration-700">
-      {/* 1. HEADER: Blue Accent + Clean White Typography */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-        <div className="space-y-1.5 w-full sm:w-auto">
-          <div className="flex items-center gap-2 text-blue-600 mb-1">
-            <div className="p-1.5 bg-blue-50 rounded-lg ring-1 ring-blue-100">
-              <Layers size={16} />
-            </div>
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]">
+    <div className="container mx-auto p-4 md:p-6 space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs font-medium">
+              <Layers className="h-3 w-3 mr-1" />
               Operational Core
-            </span>
+            </Badge>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tighter">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
             Slot Management
           </h1>
-          <p className="text-slate-500 font-medium text-xs sm:text-sm max-w-md leading-relaxed">
+          <p className="text-sm text-muted-foreground">
             Configure library shifts, seat capacity, and global timings.
           </p>
         </div>
 
-        {/* PRIMARY ACTION: Blue & White Scheme */}
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 h-12 px-6 font-bold uppercase text-[11px] tracking-widest transition-all active:scale-95"
+          className="w-full sm:w-auto gap-2"
         >
-          <Plus size={18} /> Create New Slot
+          <Plus className="h-4 w-4" />
+          Create New Slot
         </Button>
-      </header>
+      </div>
 
-      {/* 2. SEARCH & UTILITY: White Card with Blue Accents */}
-      <section className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-[24px] ring-1 ring-slate-200 shadow-sm border-b-2 border-blue-50">
-        <div className="relative w-full md:max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-          <Input
-            placeholder="Filter by shift name..."
-            className="pl-11 bg-slate-50 border-none rounded-xl h-12 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      {/* Search and Status Section */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="relative w-full md:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filter by shift name..."
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
 
-        <div className="hidden md:flex items-center gap-4 px-4 border-l border-slate-100">
-          <div className="text-right">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-              Global Status
-            </p>
-            <p className="text-xs font-bold text-blue-600">
-              Operational Pulse Active
-            </p>
+            <div className="hidden md:flex items-center gap-4 pl-4 border-l">
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Global Status</p>
+                <p className="text-sm font-medium text-primary">
+                  Operational Pulse Active
+                </p>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+              </div>
+            </div>
           </div>
-          <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center ring-1 ring-blue-100">
-            <ShieldCheck className="text-blue-600" size={16} />
-          </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      {/* 3. GRID SECTION */}
+      {/* Slots Grid Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">
+          <h2 className="text-sm font-medium text-muted-foreground">
             Active Shifts
           </h2>
-          <Separator className="flex-1 opacity-50 bg-blue-100" />
+          <Separator className="flex-1" />
         </div>
 
         {filteredSlots.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
             {filteredSlots.map((slot: Slot) => (
               <SlotCardWidget key={slot._id} slot={slot} />
             ))}
           </div>
         ) : (
-          <div className="h-64 flex flex-col items-center justify-center bg-white rounded-[32px] ring-1 ring-slate-200 border-dashed border-2 border-slate-100">
-            <Layers className="text-slate-200 mb-2" size={40} />
-            <p className="text-slate-400 font-bold text-sm">
-              No shifts match your search
-            </p>
-            <Button
-              variant="link"
-              onClick={() => setSearch("")}
-              className="text-blue-600 font-bold text-xs uppercase"
-            >
-              Reset Filters
-            </Button>
-          </div>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Layers className="h-12 w-12 text-muted-foreground/50 mb-4" />
+              <p className="text-lg font-medium text-foreground mb-2">
+                {search
+                  ? "No shifts match your search"
+                  : "No slots created yet"}
+              </p>
+              {search ? (
+                <Button
+                  variant="link"
+                  onClick={() => setSearch("")}
+                  className="text-primary"
+                >
+                  Reset Filters
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setIsModalOpen(true)}
+                  variant="link"
+                  className="text-primary"
+                >
+                  Create your first slot
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
 
+      {/* Modal */}
       <Suspense fallback={null}>
         {isModalOpen && (
           <SlotFormModal
@@ -126,8 +169,6 @@ const SlotManagementPage: React.FC = () => {
           />
         )}
       </Suspense>
-
-      <div className="h-10 md:hidden" />
     </div>
   );
 };

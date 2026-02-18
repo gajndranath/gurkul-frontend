@@ -15,6 +15,8 @@ import {
   IndianRupee,
   ChevronRight,
   Clock,
+  PieChart,
+  CalendarCheck,
 } from "lucide-react";
 
 const studentMenu = [
@@ -29,6 +31,8 @@ const studentMenu = [
     path: "/student/announcements",
     icon: <Bell size={18} />,
   },
+  { label: "Payments", path: "/student/payments", icon: <IndianRupee size={18} /> },
+  { label: "Slot Change", path: "/student/slot-requests", icon: <Armchair size={18} /> },
   { label: "Friends", path: "/student/friends", icon: <Users size={18} /> },
 ];
 
@@ -48,6 +52,16 @@ const adminMenu = [
     label: "Fee Management",
     path: "/admin/fees",
     icon: <IndianRupee size={18} />,
+  },
+  {
+    label: "Expenses",
+    path: "/admin/expenses",
+    icon: <PieChart size={18} />,
+  },
+  {
+    label: "Attendance",
+    path: "/admin/attendance",
+    icon: <CalendarCheck size={18} />,
   },
   {
     label: "Reminders",

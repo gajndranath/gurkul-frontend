@@ -22,7 +22,7 @@ export interface AdminProfile {
 
 export const fetchStudentProfile = async () => {
   const { data } =
-    await axiosInstance.get<ApiResponse<StudentProfile>>("/student-auth/me");
+    await axiosInstance.get<ApiResponse<StudentProfile>>("/student-auth/profile");
   return data.data;
 };
 

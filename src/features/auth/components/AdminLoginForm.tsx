@@ -155,6 +155,12 @@ const AdminLoginForm: React.FC = () => {
               </label>
             </div>
             {/* Optional "Forgot" link could go here if needed */}
+            <Link
+              to="/admin/forgot-password"
+              className="text-[10px] font-black text-blue-600 uppercase tracking-tighter hover:underline"
+            >
+              Forgot Password?
+            </Link>
           </div>
 
           {/* Error Section */}

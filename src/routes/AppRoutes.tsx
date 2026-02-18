@@ -9,7 +9,6 @@ import {
 import type { RouteObject } from "react-router-dom";
 import RootLayout from "../layouts/RootLayout";
 import AuthLayout from "../layouts/AuthLayout";
-import StudentPage from "../features/students/StudentPage";
 import StudentDetailPage from "../features/students/StudentDetailPage";
 import StudentFormPage from "../features/students/StudentFormPage";
 import { useSessionStore } from "../stores/sessionStore";
@@ -34,6 +33,13 @@ const NotificationsPage = lazy(
   () => import("../features/notifications/NotificationsPage"),
 );
 
+const ForgotPasswordPage = lazy(
+  () => import("@/features/auth/components/ForgotPasswordPage"),
+);
+const ResetPasswordPage = lazy(
+  () => import("@/features/auth/components/ResetPasswordPage"),
+);
+
 const AdminStudentsListPage = lazy(
   () => import("../features/admin/students/AdminStudentsListPage"),
 );
@@ -46,6 +52,22 @@ const AdminStudentForm = lazy(
 
 const AdminRemindersPage = lazy(
   () => import("@/features/reminders/admin-reminders/components/RemindersPage"),
+);
+
+const LibrarySettingsPage = lazy(
+  () => import("../features/admin/settings/LibrarySettingsPage"),
+);
+
+const ExpensesPage = lazy(
+  () => import("../features/admin/expenses/ExpensesPage"),
+);
+
+const AdminAttendancePage = lazy(
+  () => import("../features/admin/attendance/AdminAttendancePage"),
+);
+
+const AdminProfilePage = lazy(
+  () => import("../features/admin/profile/AdminProfilePage"),
 );
 
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
@@ -88,16 +110,7 @@ const routes: RouteObject[] = [
           </ProtectedRoute>
         ),
       },
-      {
-        path: "students",
-        element: (
-          <ProtectedRoute allowedRole="STUDENT">
-            <RootLayout>
-              <StudentPage />
-            </RootLayout>
-          </ProtectedRoute>
-        ),
-      },
+
       {
         path: "students/:id",
         element: (
@@ -209,6 +222,16 @@ const routes: RouteObject[] = [
         ),
       },
       {
+        path: "students/edit/:id",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <AdminStudentForm />
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "students/:studentId",
         element: (
           <ProtectedRoute allowedRole="ADMIN">
@@ -280,12 +303,76 @@ const routes: RouteObject[] = [
           </ProtectedRoute>
         ),
       },
+      {
+        path: "settings",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <LibrarySettingsPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "expenses",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <ExpensesPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "attendance",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <AdminAttendancePage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <AdminProfilePage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
 
       {
         path: "login",
         element: (
           <AuthLayout>
             <AdminLoginForm />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "forgot-password",
+        element: (
+          <AuthLayout>
+            <ForgotPasswordPage />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "reset-password/:token",
+        element: (
+          <AuthLayout>
+            <ResetPasswordPage />
           </AuthLayout>
         ),
       },
