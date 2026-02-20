@@ -12,6 +12,9 @@ export const studentFormSchema = z.object({
   joiningDate: z.string().optional(),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
+  emailVerified: z.boolean().optional(),
+  phoneVerified: z.boolean().optional(),
 });
 
 export type StudentFormValues = z.infer<typeof studentFormSchema>;

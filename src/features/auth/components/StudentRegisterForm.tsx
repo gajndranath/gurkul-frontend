@@ -64,7 +64,14 @@ const StudentRegisterForm: React.FC = () => {
   const onSubmit = (formData: FormValues) => {
     mutate(formData, {
       onSuccess: () => {
-        navigate("/student/verify-otp", { replace: true });
+        // Skip OTP/email verification UI in development
+        if (import.meta.env.MODE === "development") {
+          // Optionally, show a message or auto-login here
+          // For now, just show a success message and redirect to dashboard
+          navigate("/student/dashboard", { replace: true });
+        } else {
+          navigate("/student/verify-otp", { replace: true });
+        }
       },
     });
   };

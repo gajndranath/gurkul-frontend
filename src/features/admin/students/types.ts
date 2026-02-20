@@ -31,6 +31,8 @@ export interface Student {
   joiningDate?: string;
   notes?: string;
   tags?: string[];
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
 }
 
 export interface StudentListResponse {

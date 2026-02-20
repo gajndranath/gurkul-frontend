@@ -24,7 +24,6 @@ import {
   CardTitle,
   CardContent,
   Button,
-  Badge,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -92,6 +91,25 @@ const AdminStudentDetailPage: React.FC = () => {
     },
   });
 
+  // State for editing status and verification fields (must be before early returns)
+  const [editFields, setEditFields] = React.useState({
+    status: undefined as "ACTIVE" | "INACTIVE" | "ARCHIVED" | undefined,
+    emailVerified: false,
+    phoneVerified: false,
+  });
+  const [saving, setSaving] = React.useState(false);
+
+  // Update editFields when student data loads
+  React.useEffect(() => {
+    if (response?.data?.student) {
+      setEditFields({
+        status: response.data.student.status,
+        emailVerified: response.data.student.emailVerified ?? false,
+        phoneVerified: response.data.student.phoneVerified ?? false,
+      });
+    }
+  }, [response?.data?.student]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#f8fafc]">
@@ -133,6 +151,45 @@ const AdminStudentDetailPage: React.FC = () => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  // Handler to update student fields
+  const handleFieldChange = (
+    field: "status" | "emailVerified" | "phoneVerified",
+    value: string | boolean,
+  ) => {
+    if (field === "status") {
+      setEditFields((prev) => ({
+        ...prev,
+        status: value as "ACTIVE" | "INACTIVE" | "ARCHIVED",
+      }));
+    } else if (field === "emailVerified") {
+      setEditFields((prev) => ({ ...prev, emailVerified: value as boolean }));
+    } else if (field === "phoneVerified") {
+      setEditFields((prev) => ({ ...prev, phoneVerified: value as boolean }));
+    }
+  };
+
+  // Save handler (calls backend API)
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch(`/api/admin/students/${student._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: editFields.status,
+          emailVerified: editFields.emailVerified,
+          phoneVerified: editFields.phoneVerified,
+        }),
+      });
+      toast.success("Student updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+    } catch {
+      toast.error("Failed to update student");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-20">
@@ -222,16 +279,51 @@ const AdminStudentDetailPage: React.FC = () => {
                     <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
                       {student.name}
                     </h1>
-                    <Badge
-                      className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-[0.1em] border shadow-sm
-                ${
-                  student.status === "ACTIVE"
-                    ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                    : "bg-amber-50 text-amber-600 border-amber-100"
-                }`}
+                    {/* Status Dropdown */}
+                    <select
+                      className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-[0.1em] border shadow-sm bg-white"
+                      value={editFields.status}
+                      onChange={(e) =>
+                        handleFieldChange("status", e.target.value)
+                      }
                     >
-                      {student.status}
-                    </Badge>
+                      <option value="ACTIVE">ACTIVE</option>
+                      <option value="INACTIVE">INACTIVE</option>
+                      <option value="ARCHIVED">ARCHIVED</option>
+                    </select>
+                    {/* Email/Phone Verified Checkboxes */}
+                    <div className="flex items-center gap-4 mt-2">
+                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                        <input
+                          type="checkbox"
+                          checked={editFields.emailVerified}
+                          onChange={(e) =>
+                            handleFieldChange("emailVerified", e.target.checked)
+                          }
+                        />
+                        Email Verified
+                      </label>
+                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                        <input
+                          type="checkbox"
+                          checked={editFields.phoneVerified}
+                          onChange={(e) =>
+                            handleFieldChange("phoneVerified", e.target.checked)
+                          }
+                        />
+                        Phone Verified
+                      </label>
+                    </div>
+                    {/* Save Button */}
+                    <div className="mt-2">
+                      <Button
+                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-xs font-bold"
+                        onClick={handleSave}
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-slate-500 font-medium text-sm md:text-base">
                     Enrollment ID:{" "}

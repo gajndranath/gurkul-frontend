@@ -59,6 +59,9 @@ const AdminStudentForm: React.FC = () => {
       joiningDate: new Date().toISOString().split("T")[0],
       notes: "",
       tags: [],
+      status: "ACTIVE",
+      emailVerified: false,
+      phoneVerified: false,
     },
     mode: "onChange",
   });
@@ -95,6 +98,9 @@ const AdminStudentForm: React.FC = () => {
           : new Date().toISOString().split("T")[0],
         notes: studentData.notes || "",
         tags: studentData.tags || [],
+        status: studentData.status || "ACTIVE",
+        emailVerified: studentData.emailVerified || false,
+        phoneVerified: studentData.phoneVerified || false,
       });
     }
   }, [studentData, isEditMode, reset]);
@@ -204,6 +210,28 @@ const AdminStudentForm: React.FC = () => {
                     </div>
                     {/* FIXED: PersonalInfoSection expects form prop */}
                     <PersonalInfoSection form={form} />
+                    {/* Status & Verification Controls */}
+                    <div className="flex flex-wrap items-center gap-4 mt-4">
+                      <label className="text-xs font-bold text-slate-600 flex items-center gap-2">
+                        Status:
+                        <select
+                          className="px-2 py-1 rounded-lg text-xs font-bold border shadow-sm bg-white"
+                          {...register("status")}
+                        >
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="INACTIVE">INACTIVE</option>
+                          <option value="ARCHIVED">ARCHIVED</option>
+                        </select>
+                      </label>
+                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                        <input type="checkbox" {...register("emailVerified")} />
+                        Email Verified
+                      </label>
+                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                        <input type="checkbox" {...register("phoneVerified")} />
+                        Phone Verified
+                      </label>
+                    </div>
                   </CardContent>
                 </Card>
 
