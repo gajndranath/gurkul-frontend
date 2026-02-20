@@ -55,7 +55,9 @@ type FormValues = z.infer<typeof schema>;
 
 const StudentRegisterForm: React.FC = () => {
   const navigate = useNavigate();
-  const isDev = import.meta.env.MODE === "development";
+  const isDev =
+    import.meta.env.MODE === "development" ||
+    import.meta.env.VITE_DEV_MODE === "true";
   const { mutate, status, error, data } = useRegisterStudent();
 
   const form = useForm<FormValues>({
