@@ -177,6 +177,19 @@ const routes: RouteObject[] = [
         ),
       },
       {
+        path: "resend-otp",
+        element: (
+          <AuthLayout>
+            {React.createElement(
+              React.lazy(
+                () =>
+                  import("../features/auth/components/StudentResendOtpForm"),
+              ),
+            )}
+          </AuthLayout>
+        ),
+      },
+      {
         path: "notifications",
         element: (
           <ProtectedRoute allowedRole="STUDENT">
