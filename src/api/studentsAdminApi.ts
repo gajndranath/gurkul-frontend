@@ -17,6 +17,9 @@ export type StudentFormData = {
   joiningDate?: string;
   notes?: string;
   tags?: string[];
+  status?: "ACTIVE" | "INACTIVE" | "ARCHIVED";
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
 };
 
 export const registerStudent = async (data: Partial<StudentFormData>) => {

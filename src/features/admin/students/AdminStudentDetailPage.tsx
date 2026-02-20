@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Download,
   User,
+  CheckCircle2,
 } from "lucide-react";
 
 import {
@@ -42,6 +43,7 @@ import {
 import { useToast } from "../../../hooks/useToast";
 import {
   getStudent,
+  updateStudent as updateStudentApi,
   archiveStudent,
   reactivateStudent,
 } from "../../../api/studentsAdminApi";
@@ -99,16 +101,16 @@ const AdminStudentDetailPage: React.FC = () => {
   });
   const [saving, setSaving] = React.useState(false);
 
-  // Update editFields when student data loads
+  // Update editFields when student data loads - only if not already editing/saving
   React.useEffect(() => {
-    if (response?.data?.student) {
+    if (response?.data?.student && !saving) {
       setEditFields({
         status: response.data.student.status,
         emailVerified: response.data.student.emailVerified ?? false,
         phoneVerified: response.data.student.phoneVerified ?? false,
       });
     }
-  }, [response?.data?.student]);
+  }, [response?.data?.student, saving]);
 
   if (isLoading) {
     return (
@@ -169,23 +171,26 @@ const AdminStudentDetailPage: React.FC = () => {
     }
   };
 
+  const [saved, setSaved] = React.useState(false);
+
   // Save handler (calls backend API)
   const handleSave = async () => {
+    if (!studentId) return;
     setSaving(true);
+    setSaved(false);
     try {
-      await fetch(`/api/admin/students/${student._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: editFields.status,
-          emailVerified: editFields.emailVerified,
-          phoneVerified: editFields.phoneVerified,
-        }),
+      await updateStudentApi(studentId, {
+        status: editFields.status,
+        emailVerified: editFields.emailVerified,
+        phoneVerified: editFields.phoneVerified,
       });
       toast.success("Student updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
-    } catch {
-      toast.error("Failed to update student");
+      await queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      const errMsg = (error as Error)?.message || "Failed to update student";
+      toast.error(errMsg);
     } finally {
       setSaving(false);
     }
@@ -293,9 +298,10 @@ const AdminStudentDetailPage: React.FC = () => {
                     </select>
                     {/* Email/Phone Verified Checkboxes */}
                     <div className="flex items-center gap-4 mt-2">
-                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600 cursor-pointer">
                         <input
                           type="checkbox"
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           checked={editFields.emailVerified}
                           onChange={(e) =>
                             handleFieldChange("emailVerified", e.target.checked)
@@ -303,9 +309,10 @@ const AdminStudentDetailPage: React.FC = () => {
                         />
                         Email Verified
                       </label>
-                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                      <label className="flex items-center gap-1 text-xs font-bold text-slate-600 cursor-pointer">
                         <input
                           type="checkbox"
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           checked={editFields.phoneVerified}
                           onChange={(e) =>
                             handleFieldChange("phoneVerified", e.target.checked)
@@ -317,11 +324,23 @@ const AdminStudentDetailPage: React.FC = () => {
                     {/* Save Button */}
                     <div className="mt-2">
                       <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-xs font-bold"
+                        className={`${saved ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"} text-white rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 flex items-center gap-2`}
                         onClick={handleSave}
                         disabled={saving}
                       >
-                        {saving ? "Saving..." : "Save Changes"}
+                        {saving ? (
+                          <>
+                            <RefreshCcw className="h-3 w-3 animate-spin" />
+                            Saving...
+                          </>
+                        ) : saved ? (
+                          <>
+                            <CheckCircle2 className="h-3 w-3" />
+                            Saved!
+                          </>
+                        ) : (
+                          "Save Changes"
+                        )}
                       </Button>
                     </div>
                   </div>
