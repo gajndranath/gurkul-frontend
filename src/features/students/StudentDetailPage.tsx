@@ -77,13 +77,27 @@ const StudentDetailPage: React.FC = () => {
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle className="text-2xl">{student.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">{student.email}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-muted-foreground">{student.email}</p>
+              {student.emailVerified && (
+                <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-600 border-blue-200">
+                  Verified
+                </Badge>
+              )}
+            </div>
           </div>
-          <Badge
-            variant={student.status === "ACTIVE" ? "default" : "secondary"}
-          >
-            {student.status}
-          </Badge>
+          <div className="flex flex-col items-end gap-2">
+            <Badge
+              variant={student.status === "ACTIVE" ? "default" : "secondary"}
+            >
+              {student.status}
+            </Badge>
+            {student.phoneVerified && (
+              <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-600 border-emerald-200">
+                Phone Verified
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

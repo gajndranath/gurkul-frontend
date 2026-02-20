@@ -100,6 +100,7 @@ const AdminStudentDetailPage: React.FC = () => {
     phoneVerified: false,
   });
   const [saving, setSaving] = React.useState(false);
+  const [saved, setSaved] = React.useState(false);
 
   // Update editFields when student data loads - only if not already editing/saving
   React.useEffect(() => {
@@ -171,7 +172,6 @@ const AdminStudentDetailPage: React.FC = () => {
     }
   };
 
-  const [saved, setSaved] = React.useState(false);
 
   // Save handler (calls backend API)
   const handleSave = async () => {

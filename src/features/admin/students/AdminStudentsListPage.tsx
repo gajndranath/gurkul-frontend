@@ -450,14 +450,24 @@ const AdminStudentsListPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+                        <div className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
                           <Mail size={12} className="text-slate-400" />
                           {student.email || "—"}
-                        </p>
-                        <p className="text-[10px] font-medium text-slate-400 flex items-center gap-1.5">
+                          {student.emailVerified && (
+                            <div className="h-3 w-3 bg-blue-500 rounded-full flex items-center justify-center">
+                              <ShieldCheck size={8} className="text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-[10px] font-medium text-slate-400 flex items-center gap-1.5">
                           <Phone size={12} className="text-slate-400" />
                           {student.phone || "—"}
-                        </p>
+                          {student.phoneVerified && (
+                            <div className="h-3 w-3 bg-emerald-500 rounded-full flex items-center justify-center">
+                              <ShieldCheck size={8} className="text-white" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
