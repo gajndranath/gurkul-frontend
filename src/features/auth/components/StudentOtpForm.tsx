@@ -31,7 +31,11 @@ import {
 } from "lucide-react";
 
 // Hooks
-import { useVerifyStudentOtp } from "../hooks/useStudentAuth";
+
+import {
+  useVerifyStudentOtp,
+  useRequestStudentOtp,
+} from "../hooks/useStudentAuth";
 
 const schema = z.object({
   email: z.string().email({ message: "Institutional email required." }),
@@ -50,7 +54,21 @@ type FormValues = z.infer<typeof schema>;
 const StudentOtpForm: React.FC = () => {
   const navigate = useNavigate();
   const { mutate, status, error, data } = useVerifyStudentOtp();
+  const {
+    mutate: resendOtp,
+    status: resendStatus,
+    error: resendError,
+  } = useRequestStudentOtp();
   const [showPassword, setShowPassword] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (cooldown > 0) {
+      timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -67,6 +85,13 @@ const StudentOtpForm: React.FC = () => {
         navigate("/student/dashboard", { replace: true });
       },
     });
+  };
+
+  const handleResendOtp = () => {
+    const email = form.getValues("email");
+    if (!email) return;
+    resendOtp({ email, purpose: "VERIFY" });
+    setCooldown(30); // 30 seconds cooldown
   };
 
   return (
@@ -202,7 +227,44 @@ const StudentOtpForm: React.FC = () => {
                 </p>
               </div>
             )}
+            {/* Resend OTP status */}
+            {resendError && (
+              <div className="bg-rose-50 p-2.5 rounded-xl border border-rose-100 flex items-center gap-3 animate-in fade-in slide-in-from-top-1 mt-2">
+                <ShieldAlert size={12} className="text-rose-600 shrink-0" />
+                <p className="text-[9px] font-black text-rose-600 uppercase tracking-tighter leading-tight">
+                  {(resendError as AxiosError<{ message?: string }>)?.response
+                    ?.data?.message || "Resend OTP Error"}
+                </p>
+              </div>
+            )}
+            {resendStatus === "success" && (
+              <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-100 flex items-center gap-3 animate-in fade-in slide-in-from-top-1 mt-2">
+                <CheckCircle2 size={12} className="text-blue-600 shrink-0" />
+                <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter leading-tight">
+                  OTP sent to your email.
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* RESEND OTP BUTTON */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-10 text-xs font-bold mt-2"
+            disabled={
+              resendStatus === "pending" ||
+              cooldown > 0 ||
+              !form.getValues("email")
+            }
+            onClick={handleResendOtp}
+          >
+            {resendStatus === "pending"
+              ? "Sending..."
+              : cooldown > 0
+                ? `Resend OTP (${cooldown}s)`
+                : "Resend OTP"}
+          </Button>
 
           {/* ACTION BUTTON */}
           <Button
