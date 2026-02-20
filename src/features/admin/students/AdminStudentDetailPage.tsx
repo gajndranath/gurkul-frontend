@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -52,15 +52,25 @@ import type { SingleStudentResponse } from "./types";
 import ReminderHistory from "../fees/components/ReminderHistory";
 
 const AdminStudentDetailPage: React.FC = () => {
+  // 1. Initialize stable hooks
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
   const queryClient = useQueryClient();
 
+  // 2. All useState hooks (must be together at top)
   const [activeTab, setActiveTab] = useState("overview");
   const [archiveDialog, setArchiveDialog] = useState(false);
   const [reactivateDialog, setReactivateDialog] = useState(false);
+  const [editFields, setEditFields] = useState({
+    status: undefined as "ACTIVE" | "INACTIVE" | "ARCHIVED" | undefined,
+    emailVerified: false,
+    phoneVerified: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
+  // 3. TanStack Query hooks
   const {
     data: response,
     isLoading,
@@ -93,17 +103,8 @@ const AdminStudentDetailPage: React.FC = () => {
     },
   });
 
-  // State for editing status and verification fields (must be before early returns)
-  const [editFields, setEditFields] = React.useState({
-    status: undefined as "ACTIVE" | "INACTIVE" | "ARCHIVED" | undefined,
-    emailVerified: false,
-    phoneVerified: false,
-  });
-  const [saving, setSaving] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-
-  // Update editFields when student data loads - only if not already editing/saving
-  React.useEffect(() => {
+  // 4. Effects
+  useEffect(() => {
     if (response?.data?.student && !saving) {
       setEditFields({
         status: response.data.student.status,
@@ -113,6 +114,7 @@ const AdminStudentDetailPage: React.FC = () => {
     }
   }, [response?.data?.student, saving]);
 
+  // 5. Early returns (MUST come after all hooks above)
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#f8fafc]">
