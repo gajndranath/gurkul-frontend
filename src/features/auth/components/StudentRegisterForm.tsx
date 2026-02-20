@@ -43,7 +43,12 @@ const schema = z.object({
   phone: z.string().regex(/^\d{10}$/, { message: "Phone must be 10 digits." }),
   address: z.string().optional(),
   fatherName: z.string().optional(),
-  password: z.string().min(6, { message: "Security key min 6 chars." }).optional(),
+  password: z
+    .string()
+    .optional()
+    .refine((val) => !val || val.length >= 6, {
+      message: "Security key min 6 chars.",
+    }),
 });
 
 type FormValues = z.infer<typeof schema>;
