@@ -7,6 +7,7 @@ export interface RegisterStudentPayload {
   phone: string;
   address?: string;
   fatherName?: string;
+  password?: string;
 }
 
 export interface RequestOtpPayload {

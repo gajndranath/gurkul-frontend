@@ -28,6 +28,7 @@ import {
   UserCircle,
   AlertCircle,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 
 // Hooks
@@ -42,12 +43,14 @@ const schema = z.object({
   phone: z.string().regex(/^\d{10}$/, { message: "Phone must be 10 digits." }),
   address: z.string().optional(),
   fatherName: z.string().optional(),
+  password: z.string().min(6, { message: "Security key min 6 chars." }).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 const StudentRegisterForm: React.FC = () => {
   const navigate = useNavigate();
+  const isDev = import.meta.env.MODE === "development";
   const { mutate, status, error, data } = useRegisterStudent();
 
   const form = useForm<FormValues>({
@@ -58,6 +61,7 @@ const StudentRegisterForm: React.FC = () => {
       phone: "",
       address: "",
       fatherName: "",
+      password: "",
     },
   });
 
@@ -65,10 +69,11 @@ const StudentRegisterForm: React.FC = () => {
     mutate(formData, {
       onSuccess: () => {
         // Skip OTP/email verification UI in development
-        if (import.meta.env.MODE === "development") {
-          // Optionally, show a message or auto-login here
-          // For now, just show a success message and redirect to dashboard
-          navigate("/student/dashboard", { replace: true });
+        if (isDev) {
+          // Redirect directly to login or dashboard
+          // Since account is INACTIVE, they might need admin verification first
+          // But user requested "redirects directly to dashboard (or shows success)"
+          navigate("/student/login", { replace: true });
         } else {
           navigate("/student/verify-otp", { replace: true });
         }
@@ -209,6 +214,38 @@ const StudentRegisterForm: React.FC = () => {
                 </FormItem>
               )}
             />
+
+            {/* Password (Dev-only) */}
+            {isDev && (
+              <div className="md:col-span-2">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                        Security Key (Dev Shortcut)
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative group">
+                          <Lock
+                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors"
+                            size={18}
+                          />
+                          <Input
+                            type="password"
+                            placeholder="Set account password"
+                            className="pl-11 h-12 bg-slate-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-600 font-bold"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-[9px] font-bold text-rose-500" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             {/* Address - Full Width */}
             <div className="md:col-span-2">
