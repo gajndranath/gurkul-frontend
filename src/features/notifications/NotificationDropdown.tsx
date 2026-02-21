@@ -88,7 +88,7 @@ const NotificationDropdown: React.FC = () => {
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-[420px] rounded-[32px] border-none bg-white shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] ring-1 ring-slate-200/60 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-300 z-[100]"
+          className="fixed inset-x-4 top-20 sm:absolute sm:inset-auto sm:right-0 sm:mt-3 sm:w-[420px] rounded-[32px] border-none bg-white shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] ring-1 ring-slate-200/60 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-300 z-[100]"
           role="dialog"
           aria-modal="true"
           aria-label="Notifications"

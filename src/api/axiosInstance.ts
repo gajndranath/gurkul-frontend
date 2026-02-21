@@ -1,4 +1,5 @@
 import { useSessionStore } from "../stores/sessionStore";
+import { AuthService } from "../services/AuthService";
 import { useToast } from "../hooks/useToast";
 import axios from "axios";
 
@@ -28,18 +29,48 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      // Show toast, do NOT auto logout or redirect
-      useToast().error("Session expired", "Please log in again.");
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized - Token might be expired
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const { role } = useSessionStore.getState();
+        let newAccessToken = "";
+
+        // 1. Attempt to refresh token based on role
+        if (role === "STUDENT") {
+          const { refreshStudent } = await import("../features/auth/api/studentAuthApi");
+          const response = await refreshStudent();
+          newAccessToken = response.data.accessToken;
+        } else if (role === "ADMIN" || role === "SUPER_ADMIN") {
+          const { refreshAdmin } = await import("../features/auth/api/adminAuthApi");
+          const response = await refreshAdmin();
+          newAccessToken = response.data.accessToken;
+        }
+
+        if (newAccessToken) {
+          // 2. Update session
+          AuthService.setSession({ token: newAccessToken });
+
+          // 3. Retry
+          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+          return axiosInstance(originalRequest);
+        }
+      } catch (refreshError) {
+        AuthService.logout();
+        useToast().error("Session Expired", "Please log in again.");
+        return Promise.reject(refreshError);
+      }
     }
-    
-    // Handle 403 Forbidden - likely inactive account or invalid role
+
     if (error.response && error.response.status === 403) {
       useToast().error("Access Denied", "Your account may be inactive or unauthorized.");
-      useSessionStore.getState().logout();
+      AuthService.logout();
     }
-    // Optionally log error
+    
     return Promise.reject(error);
   },
 );

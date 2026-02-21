@@ -176,7 +176,7 @@ const ApplyAdvanceModal: React.FC<ApplyAdvanceModalProps> = ({
                 Apply Advance<span className="text-emerald-600">.</span>
               </DialogTitle>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
-                Student ID: {studentId.slice(-8)}
+                Student ID: {(studentId || "unknown").slice(-8)}
               </p>
             </div>
           </div>

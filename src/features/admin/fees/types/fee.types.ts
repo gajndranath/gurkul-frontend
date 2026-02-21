@@ -1,6 +1,6 @@
 import type { useDueTracking } from "../hooks/useDueTracking";
 
-export type FeeStatus = "PAID" | "DUE" | "PENDING";
+export type FeeStatus = "PAID" | "DUE" | "PENDING" | "NOT_GENERATED";
 export type PaymentMethod = "CASH" | "UPI" | "BANK_TRANSFER" | "ADVANCE";
 export type UrgencyLevel = "critical" | "high" | "medium" | "low";
 
@@ -63,6 +63,7 @@ export interface DashboardPaymentStatus {
     paid: number;
     due: number;
     pending: number;
+    notGenerated: number;
     totalAmount: number;
     paidAmount: number;
     dueAmount: number;

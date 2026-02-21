@@ -23,7 +23,9 @@ import {
 } from "../../components/ui/tabs";
 import { useToast } from "../../hooks/useToast";
 import { getStudent, archiveStudent } from "../../api/studentsAdminApi";
-import type { Student } from "./types";
+import StudentFeeLedgerWidget from "../admin/fees/widgets/StudentFeeLedgerWidget";
+
+import { formatCurrency } from "@/lib/utils";
 
 const StudentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +35,7 @@ const StudentDetailPage: React.FC = () => {
 
   const [archiveOpen, setArchiveOpen] = useState(false);
 
-  const { data: student, isLoading } = useQuery<Student>({
+  const { data, isLoading } = useQuery<any>({
     queryKey: ["student", id],
     queryFn: () => getStudent(id!),
     enabled: !!id,
@@ -52,7 +54,9 @@ const StudentDetailPage: React.FC = () => {
 
   if (isLoading)
     return <div className="p-8 text-center">Loading details...</div>;
-  if (!student) return <div className="p-8 text-center">Student not found</div>;
+  if (!data || !data.student) return <div className="p-8 text-center">Student not found</div>;
+
+  const { student, feeSummary } = data;
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -100,36 +104,59 @@ const StudentDetailPage: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div className="flex flex-col">
-              <span className="font-semibold text-muted-foreground">Phone</span>
-              <span>{student.phone || "N/A"}</span>
+              <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">Phone</span>
+              <span className="font-bold">{student.phone || "N/A"}</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-muted-foreground">Slot</span>
-              <span>
+              <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">Slot</span>
+              <span className="font-bold">
                 {typeof student.slotId === "object"
-                  ? student.slotId.name
+                  ? student.slotId?.name
                   : "N/A"}
               </span>
+            </div>
+            {/* FINANCIAL SUMMARY IN HEADER */}
+            <div className="flex flex-col bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+              <span className="font-semibold text-emerald-700 uppercase text-[9px] tracking-widest">Total Paid</span>
+              <span className="font-black text-emerald-900">{formatCurrency(feeSummary?.totals?.totalPaid || 0)}</span>
+            </div>
+            <div className="flex flex-col bg-rose-50 p-2 rounded-lg border border-rose-100">
+              <span className="font-semibold text-rose-700 uppercase text-[9px] tracking-widest">Total Due</span>
+              <span className="font-black text-rose-900">{formatCurrency(feeSummary?.totals?.totalDue || 0)}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="fees">Fees</TabsTrigger>
-          <TabsTrigger value="details">Log</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-xl">
+          <TabsTrigger value="overview" className="rounded-lg font-bold">Overview</TabsTrigger>
+          <TabsTrigger value="fees" className="rounded-lg font-bold">Fees & Payments</TabsTrigger>
+          <TabsTrigger value="details" className="rounded-lg font-bold">Logs</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="mt-4 space-y-4">
-          <Card>
-            <CardContent className="pt-6">
-              <p>Address: {student.address || "No address provided"}</p>
-              <p>Father Name: {student.fatherName || "N/A"}</p>
+        <TabsContent value="overview" className="mt-4 space-y-4 animate-in fade-in duration-300">
+          <Card className="rounded-[24px] border-slate-200 shadow-sm">
+            <CardContent className="pt-6 space-y-4">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Address</span>
+                <p className="font-medium">{student.address || "No address provided"}</p>
+              </div>
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Father Name</span>
+                <p className="font-medium">{student.fatherName || "N/A"}</p>
+              </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="fees" className="mt-4 animate-in fade-in duration-300">
+          <StudentFeeLedgerWidget studentId={id!} />
+        </TabsContent>
+        <TabsContent value="details" className="mt-4 animate-in fade-in duration-300">
+           <Card className="rounded-[24px] border-slate-200 shadow-sm p-8 text-center">
+             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Activity log coming soon...</p>
+           </Card>
         </TabsContent>
       </Tabs>
 

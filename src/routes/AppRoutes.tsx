@@ -89,14 +89,34 @@ const ProtectedRoute = ({
       allowedRole === "STUDENT" ? "/student/login" : "/admin/login";
     return <Navigate to={loginPath} replace />;
   }
-  if (allowedRole === "ADMIN" && role === "STUDENT")
+
+  if (allowedRole === "ADMIN" && !["ADMIN", "SUPER_ADMIN", "STAFF"].includes(role || "")) {
     return <Navigate to="/student/dashboard" replace />;
-  if (allowedRole === "STUDENT" && (role === "ADMIN" || role === "SUPER_ADMIN"))
+  }
+
+  if (allowedRole === "STUDENT" && role !== "STUDENT") {
     return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Redirect authenticated users away from public pages (login/register)
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { token, role } = useSessionStore();
+
+  if (token) {
+    return <Navigate to={role === "STUDENT" ? "/student/dashboard" : "/admin/dashboard"} replace />;
+  }
+
   return <>{children}</>;
 };
 
 const routes: RouteObject[] = [
+  {
+    path: "/",
+    element: <Navigate to="/student/dashboard" replace />,
+  },
   {
     path: "/student",
     children: [
@@ -144,24 +164,28 @@ const routes: RouteObject[] = [
       {
         path: "login",
         element: (
-          <AuthLayout>
-            <StudentLoginForm />
-          </AuthLayout>
+          <PublicRoute>
+            <AuthLayout>
+              <StudentLoginForm />
+            </AuthLayout>
+          </PublicRoute>
         ),
       },
       {
         path: "register",
         element: (
-          <AuthLayout>
-            <React.Suspense fallback={null}>
-              {React.createElement(
-                React.lazy(
-                  () =>
-                    import("../features/auth/components/StudentRegisterForm"),
-                ),
-              )}
-            </React.Suspense>
-          </AuthLayout>
+          <PublicRoute>
+            <AuthLayout>
+              <React.Suspense fallback={null}>
+                {React.createElement(
+                  React.lazy(
+                    () =>
+                      import("../features/auth/components/StudentRegisterForm"),
+                  ),
+                )}
+              </React.Suspense>
+            </AuthLayout>
+          </PublicRoute>
         ),
       },
       {
@@ -368,9 +392,11 @@ const routes: RouteObject[] = [
       {
         path: "login",
         element: (
-          <AuthLayout>
-            <AdminLoginForm />
-          </AuthLayout>
+          <PublicRoute>
+            <AuthLayout>
+              <AdminLoginForm />
+            </AuthLayout>
+          </PublicRoute>
         ),
       },
       {

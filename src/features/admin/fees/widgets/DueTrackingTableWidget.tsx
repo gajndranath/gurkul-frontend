@@ -255,11 +255,11 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {paginatedData.map((record) => {
+                        {paginatedData.map((record, index) => {
                           const urgency = getUrgencyConfig(record.urgency);
                           return (
                             <tr
-                              key={`${record.studentId}-${record.month}-${record.year}`}
+                              key={`${record.studentId || "unknown"}-${record.month}-${record.year}-${record.totalAmount}-${index}`}
                               className="group hover:bg-slate-50/50 transition-colors"
                             >
                               <td className="px-6 py-4">
@@ -276,7 +276,7 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
                                       {record.studentName}
                                     </p>
                                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">
-                                      ID: {record.studentId.slice(-6)}
+                                      ID: {(record.studentId || "unknown").slice(-6)}
                                     </p>
                                   </div>
                                 </div>
@@ -340,7 +340,7 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
                                     <DropdownMenuItem
                                       onClick={() =>
                                         navigate(
-                                          `/admin/students/${record.studentId}`,
+                                          `/admin/students/${record.studentId || "unknown"}`,
                                         )
                                       }
                                       className="rounded-lg text-xs font-medium py-2 cursor-pointer hover:bg-slate-50"
@@ -384,11 +384,11 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
 
                   {/* Mobile Card View */}
                   <div className="block md:hidden divide-y divide-slate-100">
-                    {paginatedData.map((record) => {
+                    {paginatedData.map((record, index) => {
                       const urgency = getUrgencyConfig(record.urgency);
                       return (
                         <div
-                          key={`${record.studentId}-${record.month}-${record.year}`}
+                          key={`${record.studentId || "unknown"}-${record.month}-${record.year}-${record.totalAmount}-${index}`}
                           className="p-5 space-y-4 hover:bg-slate-50/50 transition-colors"
                         >
                           <div className="flex items-start justify-between">
@@ -405,7 +405,7 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
                                   {record.studentName}
                                 </p>
                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
-                                  ID: {record.studentId.slice(-8)}
+                                  ID: {(record.studentId || "unknown").slice(-8)}
                                 </p>
                               </div>
                             </div>
@@ -542,7 +542,7 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
         {/* Payment Action Modal */}
         {paymentItem && (
           <PaymentActionModal
-            studentId={paymentItem.studentId}
+            studentId={paymentItem.studentId || "unknown"}
             item={{
               month: paymentItem.month,
               year: paymentItem.year,
@@ -564,7 +564,7 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
         {/* ✅ NEW: Apply Advance Modal */}
         {applyAdvanceStudent && (
           <ApplyAdvanceModal
-            studentId={applyAdvanceStudent.studentId}
+            studentId={applyAdvanceStudent.studentId || "unknown"}
             isOpen={!!applyAdvanceStudent}
             onClose={() => setApplyAdvanceStudent(null)}
             onSuccess={() => {

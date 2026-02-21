@@ -30,6 +30,11 @@ export const getStatusConfig = (status: string) => {
         color: "bg-rose-50 text-rose-700 border-rose-100",
         label: "Overdue",
       };
+    case "NOT_GENERATED":
+      return {
+        color: "bg-slate-50 text-slate-400 border-slate-100",
+        label: "Not Billed",
+      };
     default:
       return {
         color: "bg-amber-50 text-amber-700 border-amber-100",

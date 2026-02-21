@@ -1,4 +1,14 @@
 // Scripts for firebase messaging service worker
+console.log("[firebase-messaging-sw.js] Service Worker Loaded");
+
+self.addEventListener('install', (event) => {
+  console.log("[firebase-messaging-sw.js] SW Installing...");
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  console.log("[firebase-messaging-sw.js] SW Activated and Monitoring.");
+});
 
 importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js");
@@ -18,12 +28,48 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
-  console.log("[firebase-messaging-sw.js] Received background message ", payload);
-  const notificationTitle = payload.notification.title;
+  console.log("[firebase-messaging-sw.js] 🔔 Background Message Received!");
+  console.log("[firebase-messaging-sw.js] Full Payload Details:", JSON.stringify(payload, null, 2));
+  
+  const title = payload.notification?.title || payload.data?.title || "New Library Notification";
+  const body = payload.notification?.body || payload.data?.body || "Check the app for details";
+  
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: "/icon.png", // Ensure you have an icon in public folder
+    body: body,
+    icon: "/icon.png",
+    badge: "/icon.png",
+    data: payload.data,
+    tag: payload.notification?.tag || payload.data?.tag || 'registry-notification',
+    renotify: true,
+    vibrate: [200, 100, 200]
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  console.log("[firebase-messaging-sw.js] Showing notification with title:", title);
+  return self.registration.showNotification(title, notificationOptions);
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', function(event) {
+  console.log("[firebase-messaging-sw.js] Notification clicked:", event.notification.tag);
+  event.notification.close();
+
+  // Try to open the app or focus an existing window
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      console.log("[firebase-messaging-sw.js] Matching clients count:", clientList.length);
+      for (let i = 0; i < clientList.length; i++) {
+        let client = clientList[i];
+        // Focus the first matching window
+        if ('focus' in client) {
+          return client.focus();
+        }
+      }
+      // If no window is open, open the dashboard
+      if (clients.openWindow) {
+        return clients.openWindow('/dashboard');
+      }
+    }).catch(err => {
+      console.error("[firebase-messaging-sw.js] Click handling failed:", err);
+    })
+  );
 });

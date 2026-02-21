@@ -63,3 +63,10 @@ export const logoutStudent = async () => {
   );
   return data;
 };
+
+export const refreshStudent = async () => {
+  const { data } = await axiosInstance.post<ApiResponse<{ accessToken: string }>>(
+    "/student-auth/refresh-token",
+  );
+  return data;
+};

@@ -33,6 +33,8 @@ export interface Student {
   tags?: string[];
   emailVerified?: boolean;
   phoneVerified?: boolean;
+  totalDue?: number;
+  totalPaid?: number;
 }
 
 export interface StudentListResponse {

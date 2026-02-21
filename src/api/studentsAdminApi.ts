@@ -1,6 +1,5 @@
 import axiosInstance from "./axiosInstance";
 import type {
-  Student,
   StudentListResponse,
 } from "../features/admin/students/types";
 
@@ -84,9 +83,9 @@ export const getStudents = async (
 };
 
 // ✅ Get single student by ID
-export const getStudent = async (id: string): Promise<Student> => {
-  const { data } = await axiosInstance.get<Student>(`/students/${id}`);
-  return data;
+export const getStudent = async (id: string): Promise<any> => {
+  const { data } = await axiosInstance.get(`/students/${id}`);
+  return data.data; // This returns { student, feeSummary }
 };
 
 // ✅ Get student fee summary

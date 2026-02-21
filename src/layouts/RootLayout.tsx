@@ -10,13 +10,11 @@ import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import { useNotificationSocket } from "../features/notifications/hooks/useNotificationSocket";
 
-import { useFcm } from "../hooks/useFcm";
+
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useSocket();
   useNotificationSocket();
-  // Initialize FCM for push notifications
-  useFcm();
   const navigate = useNavigate();
   const location = useLocation();
 

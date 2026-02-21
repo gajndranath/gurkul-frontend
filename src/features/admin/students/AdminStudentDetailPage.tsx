@@ -105,14 +105,14 @@ const AdminStudentDetailPage: React.FC = () => {
 
   // 4. Effects
   useEffect(() => {
-    if (response?.data?.student && !saving) {
+    if (response?.student && !saving) {
       setEditFields({
-        status: response.data.student.status,
-        emailVerified: response.data.student.emailVerified ?? false,
-        phoneVerified: response.data.student.phoneVerified ?? false,
+        status: response.student.status,
+        emailVerified: response.student.emailVerified ?? false,
+        phoneVerified: response.student.phoneVerified ?? false,
       });
     }
-  }, [response?.data?.student, saving]);
+  }, [response?.student, saving]);
 
   // 5. Early returns (MUST come after all hooks above)
   if (isLoading) {
@@ -124,7 +124,7 @@ const AdminStudentDetailPage: React.FC = () => {
     );
   }
 
-  if (isError || !response?.data) {
+  if (isError || !response?.student) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
         <Card className="max-w-md w-full border-none shadow-2xl rounded-[32px] p-8 text-center bg-white">
@@ -149,7 +149,7 @@ const AdminStudentDetailPage: React.FC = () => {
     );
   }
 
-  const { student, feeSummary } = response.data;
+  const { student, feeSummary } = response;
   const initials = student.name
     .split(" ")
     .map((n) => n[0])

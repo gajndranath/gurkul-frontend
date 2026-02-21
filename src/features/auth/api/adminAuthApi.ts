@@ -18,3 +18,8 @@ export const logoutAdmin = async () => {
   const { data } = await axiosInstance.post<ApiResponse<null>>("/admin/logout");
   return data;
 };
+
+export const refreshAdmin = async () => {
+  const { data } = await axiosInstance.post<ApiResponse<{ accessToken: string }>>("/admin/refresh-token");
+  return data;
+};

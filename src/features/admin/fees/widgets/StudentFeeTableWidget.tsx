@@ -32,7 +32,7 @@ const StudentFeeTableWidget: React.FC = memo(() => {
     return details.filter((item: FeeDetailItem) => {
       const matchesSearch =
         item.studentName.toLowerCase().includes(search.toLowerCase()) ||
-        item.studentId.toLowerCase().includes(search.toLowerCase());
+        (item.studentId?.toLowerCase() || "unknown").includes(search.toLowerCase());
       const matchesStatus =
         filterStatus === "ALL" || item.status === filterStatus;
       return matchesSearch && matchesStatus;
@@ -59,7 +59,7 @@ const StudentFeeTableWidget: React.FC = memo(() => {
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto pb-2 xl:pb-0 scrollbar-hide">
-          {(["ALL", "PAID", "DUE", "PENDING"] as const).map((status) => (
+          {(["ALL", "PAID", "DUE", "PENDING", "NOT_GENERATED"] as const).map((status) => (
             <Button
               key={status}
               variant={filterStatus === status ? "default" : "ghost"}
@@ -103,11 +103,11 @@ const StudentFeeTableWidget: React.FC = memo(() => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredData.map((item: FeeDetailItem) => {
+                {filteredData.map((item: FeeDetailItem, index: number) => {
                   const statusCfg = getStatusConfig(item.status);
                   return (
                     <tr
-                      key={item.studentId}
+                      key={`${item.studentId || "unknown"}-${item.month}-${item.year}-${index}`}
                       className="group hover:bg-slate-50/30 transition-colors"
                     >
                       <td className="px-6 py-5">
@@ -115,7 +115,7 @@ const StudentFeeTableWidget: React.FC = memo(() => {
                           {item.studentName}
                         </p>
                         <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter italic">
-                          ID: {item.studentId.slice(-6)}
+                          ID: {(item.studentId || "unknown").slice(-6)}
                         </p>
                       </td>
                       <td className="px-6 py-5">
@@ -154,10 +154,10 @@ const StudentFeeTableWidget: React.FC = memo(() => {
 
           {/* MOBILE CARD VIEW */}
           <div className="block md:hidden divide-y divide-slate-100">
-            {filteredData.map((item: FeeDetailItem) => {
+            {filteredData.map((item: FeeDetailItem, index: number) => {
               const statusCfg = getStatusConfig(item.status);
               return (
-                <div key={item.studentId} className="p-5 space-y-4">
+                <div key={`${item.studentId || "unknown"}-${item.month}-${item.year}-${index}`} className="p-5 space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="flex gap-3">
                       <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-blue-600 border border-slate-100 shrink-0">
@@ -168,7 +168,7 @@ const StudentFeeTableWidget: React.FC = memo(() => {
                           {item.studentName}
                         </p>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
-                          ID: {item.studentId.slice(-8)}
+                          ID: {(item.studentId || "unknown").slice(-8)}
                         </p>
                       </div>
                     </div>
@@ -182,7 +182,7 @@ const StudentFeeTableWidget: React.FC = memo(() => {
                   <div className="flex justify-between items-center bg-slate-50/80 p-3 rounded-2xl ring-1 ring-slate-100">
                     <div className="space-y-0.5">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                        Current Balance
+                        {item.status === "PAID" ? "Amount Paid" : "Amount Due"}
                       </p>
                       <p className="text-lg font-black text-slate-900 leading-none">
                         {formatCurrency(item.totalAmount)}
@@ -247,6 +247,7 @@ const ActionToggle = ({
   onCollect: () => void;
   onViewReceipt: () => void;
 }) => {
+  // ✅ Show Collect button for anything NOT fully paid
   if (item.status !== "PAID") {
     return (
       <Button

@@ -20,15 +20,15 @@ export default defineConfig({
         display: "standalone",
         icons: [
           {
-            src: "vite.svg",
-            sizes: "any",
-            type: "image/svg+xml",
+            src: "icon.png",
+            sizes: "192x192",
+            type: "image/png",
             purpose: "any",
           },
           {
-            src: "vite.svg",
-            sizes: "any",
-            type: "image/svg+xml",
+            src: "icon.png",
+            sizes: "512x512",
+            type: "image/png",
             purpose: "maskable",
           },
         ],

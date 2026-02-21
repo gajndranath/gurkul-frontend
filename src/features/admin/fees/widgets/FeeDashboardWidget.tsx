@@ -25,6 +25,7 @@ const FeeDashboardWidget: React.FC = memo(() => {
         paid: 0,
         due: 0,
         pending: 0,
+        notGenerated: 0,
         totalAmount: 0,
         paidAmount: 0,
         dueAmount: 0,
@@ -103,6 +104,11 @@ const FeeDashboardWidget: React.FC = memo(() => {
               color="text-amber-500"
             />
             <MiniStat label="Overdue" value={stats.due} color="text-rose-600" />
+            <MiniStat
+              label="Not Billed"
+              value={stats.notGenerated}
+              color="text-slate-400"
+            />
             <MiniStat
               label="Total Active"
               value={stats.total}

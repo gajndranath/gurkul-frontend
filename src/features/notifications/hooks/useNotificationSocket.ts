@@ -15,6 +15,11 @@ export function useNotificationSocket() {
     socket.on("notification", (data) => {
       console.log("Real-time Notification Received:", data);
 
+      // ✅ Play Notification Sound
+      import("../../../utils/notificationSound").then(({ playNotificationSound }) => {
+        playNotificationSound();
+      });
+
       // Refresh notifications list in background
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
 

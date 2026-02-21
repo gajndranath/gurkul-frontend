@@ -16,6 +16,10 @@ interface SessionState {
   student: Student | null;
   admin: Admin | null;
   rememberMe: boolean;
+  _hasHydrated: boolean;
+  fcmToken: string | null;
+  setHasHydrated: (state: boolean) => void;
+  setFcmToken: (token: string | null) => void;
   setSession: (
     session: Partial<AuthSession> & { student?: Student; admin?: Admin },
     rememberMe?: boolean,
@@ -47,8 +51,12 @@ export const useSessionStore = create(
       expiresAt: null,
       student: null,
       admin: null,
-      rememberMe: false,
-      setSession: (session, rememberMe = false) => {
+      rememberMe: true,
+      _hasHydrated: false,
+      fcmToken: null,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
+      setFcmToken: (token) => set({ fcmToken: token }),
+      setSession: (session, rememberMe = true) => {
         set((state) => ({ ...state, ...session, rememberMe }));
       },
       clearSession: () => {
@@ -60,6 +68,7 @@ export const useSessionStore = create(
           student: null,
           admin: null,
           rememberMe: false,
+          fcmToken: null,
         });
         localStorage.removeItem("library-auth-cache");
         sessionStorage.removeItem("library-auth-cache");
@@ -76,7 +85,7 @@ export const useSessionStore = create(
         expiresAt: number,
         student?: Student,
         admin?: Admin,
-        rememberMe: boolean = false,
+        rememberMe: boolean = true,
       ) => {
         set({ token, userId, role, expiresAt, student, admin, rememberMe });
       },
@@ -107,6 +116,9 @@ export const useSessionStore = create(
           sessionStorage.removeItem(name);
         },
       },
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     },
   ),
 );
@@ -115,7 +127,7 @@ export const useSessionStore = create(
 export function useSessionSync() {
   useEffect(() => {
     const sync = (e: StorageEvent) => {
-      if (e.key === "session-storage" || e.key === "session-rememberMe") {
+      if (e.key === "library-auth-cache") {
         window.location.reload();
       }
     };

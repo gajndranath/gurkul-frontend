@@ -41,7 +41,7 @@ const AdminLoginForm: React.FC = () => {
   const navigate = useNavigate();
   const { mutate, status, error } = useLoginAdmin();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

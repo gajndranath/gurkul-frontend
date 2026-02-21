@@ -420,6 +420,9 @@ const AdminStudentsListPage: React.FC = () => {
                 <TableHead className="font-black text-[10px] text-slate-400 uppercase tracking-[0.2em]">
                   Slot
                 </TableHead>
+                <TableHead className="font-black text-[10px] text-slate-400 uppercase tracking-[0.2em]">
+                  Balance
+                </TableHead>
                 <TableHead className="text-right pr-6 font-black text-[10px] text-slate-400 uppercase tracking-[0.2em]">
                   Actions
                 </TableHead>
@@ -428,7 +431,7 @@ const AdminStudentsListPage: React.FC = () => {
             <TableBody>
               {students.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-64">
+                  <TableCell colSpan={6} className="h-64">
                     <EmptyState />
                   </TableCell>
                 </TableRow>
@@ -488,6 +491,16 @@ const AdminStudentsListPage: React.FC = () => {
                             : student.slotId || "Unassigned"}
                         </span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                       <div className="space-y-0.5">
+                         <p className={`text-xs font-black ${(student.totalDue || 0) > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                           ₹{student.totalDue || 0}
+                         </p>
+                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                           Outstanding
+                         </p>
+                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-6">
                       <ActionDropdown

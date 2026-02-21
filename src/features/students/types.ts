@@ -24,6 +24,14 @@ export interface Student {
   tags?: string[];
   emailVerified?: boolean;
   phoneVerified?: boolean;
+  feeSummary?: {
+    totals: {
+      totalPaid: number;
+      totalDue: number;
+      totalPending: number;
+    };
+    feeHistory: FeeHistoryItem[];
+  };
 }
 
 export interface StudentListResponse {
@@ -37,18 +45,14 @@ export interface StudentListResponse {
 }
 
 export interface SingleStudentResponse {
-  success: boolean;
-  message: string;
-  data: {
-    student: Student;
-    feeSummary: {
-      totals: {
-        totalPaid: number;
-        totalDue: number;
-        totalPending: number;
-      };
-      feeHistory: FeeHistoryItem[];
+  student: Student;
+  feeSummary: {
+    totals: {
+      totalPaid: number;
+      totalDue: number;
+      totalPending: number;
     };
+    feeHistory: FeeHistoryItem[];
   };
 }
 
