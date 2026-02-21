@@ -204,7 +204,8 @@ const NotificationDropdown: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                navigate(role === "ADMIN" ? "/admin/notifications" : "/notifications");
+                const isAdmin = role && ["ADMIN", "SUPER_ADMIN", "STAFF"].includes(role);
+                navigate(isAdmin ? "/admin/notifications" : "/student/notifications");
                 setIsOpen(false);
               }}
               className="w-full py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-blue-600 transition-all active:scale-[0.98]"

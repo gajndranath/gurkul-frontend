@@ -18,6 +18,16 @@ export const useFeeSummary = (studentId: string) => {
   });
 };
 
+/** ✅ Hook for full-year fee calendar grid */
+export const useFeeCalendar = (studentId: string, year?: number) => {
+  return useQuery({
+    queryKey: ["fees", "calendar", studentId, year],
+    queryFn: () => feeApi.getFeeCalendar(studentId, year),
+    enabled: !!studentId,
+  });
+};
+
+
 export const usePaymentActions = (studentId: string) => {
   const queryClient = useQueryClient();
   const toast = useToast(); // Returns an object { success, error, etc. }

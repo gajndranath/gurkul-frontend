@@ -33,6 +33,14 @@ const NotificationsPage = lazy(
   () => import("../features/notifications/NotificationsPage"),
 );
 
+const StudentProfilePage = lazy(
+  () => import("../features/students/StudentProfilePage"),
+);
+
+const StudentFeePage = lazy(
+  () => import("../features/students/StudentFeePage"),
+);
+
 const ForgotPasswordPage = lazy(
   () => import("@/features/auth/components/ForgotPasswordPage"),
 );
@@ -223,6 +231,30 @@ const routes: RouteObject[] = [
           </ProtectedRoute>
         ),
       },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute allowedRole="STUDENT">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <StudentProfilePage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "fees",
+        element: (
+          <ProtectedRoute allowedRole="STUDENT">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <StudentFeePage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
@@ -384,6 +416,16 @@ const routes: RouteObject[] = [
               <Suspense fallback={<Loader />}>
                 <AdminProfilePage />
               </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "notifications",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <NotificationsPage />
             </RootLayout>
           </ProtectedRoute>
         ),

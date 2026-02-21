@@ -1,20 +1,9 @@
 // frontend/src/features/admin/fees/api/feeApi.ts
 
 import axiosInstance from "@/api/axiosInstance";
-import type { PaymentPayload } from "../types/fee.types";
+import type { PaymentPayload, FeeHistoryItem } from "../types/fee.types";
 
-export interface FeeHistoryItem {
-  month: number;
-  year: number;
-  baseFee: number;
-  dueCarriedForward: number;
-  totalAmount: number;
-  status: "PAID" | "DUE" | "PENDING";
-  paidAmount?: number;
-  paymentDate?: string;
-  coveredByAdvance: boolean;
-  locked: boolean;
-}
+export type { FeeHistoryItem };
 
 export interface FeeSummaryResponse {
   student?: {
@@ -38,7 +27,13 @@ export interface FeeSummaryResponse {
     monthsDue: string[];
     reminderDate?: string;
   };
+  totals?: {
+    totalPaid: number;
+    totalDue: number;
+    totalPending: number;
+  };
 }
+
 
 export const getFeeSummary = async (
   studentId: string,
@@ -109,3 +104,23 @@ export const markFeeAsDue = async (
   );
   return data.data;
 };
+
+/** ✅ Get full-year calendar grid for a student */
+export const getFeeCalendar = async (studentId: string, year?: number) => {
+  const params = year ? { year } : {};
+  const { data } = await axiosInstance.get(`/fees/calendar/${studentId}`, { params });
+  return data.data as {
+    calendar: import("../types/fee.types").FeeCalendarMonth[];
+    summary: {
+      year: number;
+      totalPaid: number;
+      totalDue: number;
+      totalPending: number;
+      paidMonths: number;
+      dueMonths: number;
+      pendingMonths: number;
+    };
+    year: number;
+  };
+};
+

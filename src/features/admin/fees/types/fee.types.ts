@@ -1,7 +1,5 @@
-import type { useDueTracking } from "../hooks/useDueTracking";
-
-export type FeeStatus = "PAID" | "DUE" | "PENDING" | "NOT_GENERATED";
-export type PaymentMethod = "CASH" | "UPI" | "BANK_TRANSFER" | "ADVANCE";
+export type FeeStatus = "PAID" | "DUE" | "PENDING" | "NOT_GENERATED" | "NO_RECORD";
+export type PaymentMethod = "CASH" | "UPI" | "BANK_TRANSFER" | "ADVANCE" | "CHEQUE" | "OTHER";
 export type UrgencyLevel = "critical" | "high" | "medium" | "low";
 
 export interface PaymentPayload {
@@ -17,11 +15,39 @@ export interface FeeHistoryItem {
   baseFee: number;
   dueCarriedForward: number;
   totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
   status: FeeStatus;
-  paidAmount?: number;
-  paymentDate?: string;
+  paymentDate?: string | null;
+  paymentMethod?: string | null;
+  transactionId?: string | null;
+  remarks?: string | null;
   coveredByAdvance: boolean;
   locked: boolean;
+  feeDueDate?: string | Date | null;
+  daysOverdue: number;
+}
+
+/** Calendar grid month cell — used by FeeCalendarView */
+export interface FeeCalendarMonth {
+  month: number;
+  year: number;
+  label: string;
+  hasRecord: boolean;
+  status: FeeStatus;
+  baseFee: number;
+  dueCarriedForward: number;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  paymentDate?: string | null;
+  paymentMethod?: string | null;
+  transactionId?: string | null;
+  remarks?: string | null;
+  coveredByAdvance: boolean;
+  locked: boolean;
+  feeDueDate?: string | Date | null;
+  daysOverdue: number;
 }
 
 export interface StudentFeeSummary {
@@ -200,4 +226,5 @@ export interface ReceiptListResponse {
   };
 }
 
-export type UseDueTrackingReturn = ReturnType<typeof useDueTracking>;
+
+
