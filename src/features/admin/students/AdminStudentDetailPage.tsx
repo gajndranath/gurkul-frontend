@@ -75,11 +75,12 @@ const AdminStudentDetailPage: React.FC = () => {
     data: response,
     isLoading,
     isError,
-  } = useQuery<SingleStudentResponse>({
+  } = useQuery<SingleStudentResponse["data"]>({
     queryKey: ["student", studentId],
     queryFn: async () => {
+      // getStudent already returns data.data → { student, feeSummary }
       const data = await getStudent(studentId!);
-      return data as unknown as SingleStudentResponse;
+      return data as SingleStudentResponse["data"];
     },
     enabled: !!studentId,
   });
@@ -152,7 +153,7 @@ const AdminStudentDetailPage: React.FC = () => {
   const { student, feeSummary } = response;
   const initials = student.name
     .split(" ")
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
