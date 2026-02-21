@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, Suspense, lazy } from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users, DollarSign, CreditCard, AlertCircle } from "lucide-react";
 import {
@@ -6,11 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Separator } from "../../components/ui/separator";
 import {
   fetchDashboardStats,
   fetchAuditLogs,
@@ -19,18 +15,8 @@ import {
 import {} from "../../api/adminDashboardApi";
 import { toast } from "sonner";
 import { formatCurrency } from "../../lib/utils";
-import MonthlyTrendChart from "./widgets/MonthlyTrendChart";
-const SlotOccupancyTable = React.lazy(
-  () => import("./widgets/SlotOccupancyTable"),
-);
-const AuditLogTable = React.lazy(() => import("./widgets/AuditLogTable"));
-const DueSummaryTable = React.lazy(() => import("./widgets/DueSummaryTable"));
-const PaymentStatusPie = React.lazy(() => import("./widgets/PaymentStatusPie"));
-const TopSlots = React.lazy(() => import("./widgets/TopSlots"));
 
 import QuickStats from "./widgets/QuickStats";
-import SlotOccupancyBar from "./widgets/SlotOccupancyBar";
-const ReminderWidget = lazy(() => import("./widgets/ReminderWidget"));
 
 const CHART_COLORS = {
   primary: "#4f46e5",
@@ -44,19 +30,11 @@ const PAGE_SIZE = 20;
 const AdminDashboardPage: React.FC = () => {
   // Debug: print when component mounts and on data change
 
-  const [selectedMonth, setSelectedMonth] = useState<number>(
-    new Date().getMonth(),
-  );
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear(),
-  );
-  const [auditPage, setAuditPage] = useState(1);
-  const [duePage, setDuePage] = useState(1);
+  // ...existing code...
 
   // Fetch dashboard stats
   const {
     data: dashboardData,
-    refetch,
     isError: isDashboardError,
     error: dashboardError,
   } = useQuery({
@@ -66,26 +44,20 @@ const AdminDashboardPage: React.FC = () => {
   });
 
   // Fetch audit logs
-  const {
-    data: auditData,
-    isLoading: auditLoading,
-    isError: isAuditError,
-    error: auditError,
-  } = useQuery({
-    queryKey: ["audit-logs", auditPage],
-    queryFn: () => fetchAuditLogs(auditPage, PAGE_SIZE),
+  const { isError: isAuditError, error: auditError } = useQuery({
+    queryKey: ["audit-logs", 1],
+    queryFn: () => fetchAuditLogs(1, PAGE_SIZE),
     staleTime: 5 * 60 * 1000,
   });
 
   // Fetch due summary
-  const {
-    data: dueSummary,
-    isLoading: dueLoading,
-    isError: isDueError,
-    error: dueError,
-  } = useQuery({
-    queryKey: ["due-summary", selectedMonth, selectedYear],
-    queryFn: () => fetchEndOfMonthDueSummary(selectedMonth, selectedYear),
+  const { isError: isDueError, error: dueError } = useQuery({
+    queryKey: ["due-summary", new Date().getMonth(), new Date().getFullYear()],
+    queryFn: () =>
+      fetchEndOfMonthDueSummary(
+        new Date().getMonth(),
+        new Date().getFullYear(),
+      ),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -136,22 +108,9 @@ const AdminDashboardPage: React.FC = () => {
 
   // Audit logs pagination
   // No need to memoize simple property access; use direct assignment for clarity
-  const auditLogs = auditData?.logs || [];
-  const auditTotalPages = auditData?.pagination?.pages || 1;
-  // useCallback for stable reference (passed to child component)
-  const handleAuditPageChange = useCallback((p: number) => setAuditPage(p), []);
 
   // Due summary pagination
   // Memoize dueStudents to satisfy exhaustive-deps and avoid unnecessary recalculation
-  const dueStudents = useMemo(() => dueSummary?.students || [], [dueSummary]);
-  const dueTotal = dueStudents.length;
-  const duePageSize = PAGE_SIZE;
-  const pagedDueStudents = useMemo(
-    () => dueStudents.slice((duePage - 1) * duePageSize, duePage * duePageSize),
-    [dueStudents, duePage, duePageSize],
-  );
-  // useCallback for stable reference (passed to child component)
-  const handleDuePageChange = useCallback((p: number) => setDuePage(p), []);
 
   // Show toast notifications for errors
   React.useEffect(() => {

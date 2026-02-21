@@ -276,7 +276,10 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
                                       {record.studentName}
                                     </p>
                                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">
-                                      ID: {(record.studentId || "unknown").slice(-6)}
+                                      ID:{" "}
+                                      {(record.studentId || "unknown").slice(
+                                        -6,
+                                      )}
                                     </p>
                                   </div>
                                 </div>
@@ -405,7 +408,8 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
                                   {record.studentName}
                                 </p>
                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
-                                  ID: {(record.studentId || "unknown").slice(-8)}
+                                  ID:{" "}
+                                  {(record.studentId || "unknown").slice(-8)}
                                 </p>
                               </div>
                             </div>
@@ -552,6 +556,9 @@ const DueTrackingTableWidget: React.FC<DueTrackingTableWidgetProps> = memo(
               dueCarriedForward: 0,
               coveredByAdvance: false,
               locked: false,
+              paidAmount: 0,
+              remainingAmount: paymentItem.totalAmount,
+              daysOverdue: 0,
             }}
             isOpen={!!paymentItem}
             onClose={() => {
