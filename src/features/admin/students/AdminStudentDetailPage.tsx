@@ -17,6 +17,7 @@ import {
   Download,
   User,
   CheckCircle2,
+  LayoutGrid,
 } from "lucide-react";
 
 import {
@@ -427,6 +428,34 @@ const AdminStudentDetailPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-5">
+                <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-50 ring-1 ring-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <MapPin className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-600">
+                      Assigned Hall
+                    </span>
+                  </div>
+                  <span className="font-black text-sm text-slate-900 uppercase">
+                    {(student.slotId as any)?.roomId?.name || "Global"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-50 ring-1 ring-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <LayoutGrid className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-600">
+                      Primary Shift
+                    </span>
+                  </div>
+                  <span className="font-black text-sm text-slate-900">
+                    {(student.slotId as any)?.name || "N/A"}
+                  </span>
+                </div>
+
                 <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-50 ring-1 ring-slate-100">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-white rounded-xl shadow-sm">

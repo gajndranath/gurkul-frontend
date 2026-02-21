@@ -85,7 +85,13 @@
   border-radius: 20px;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover,
-.overflow-x-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.4);
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 5s infinite;
+}
+

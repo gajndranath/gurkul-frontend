@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axiosInstance from "../../../api/axiosInstance";
 
 import { Card, CardContent, Button, Badge, Input } from "@/components/ui";
 import {
@@ -85,6 +86,23 @@ interface ApiResponse {
 }
 
 const AdminStudentsListPage: React.FC = () => {
+  const restoreMutation = useMutation({
+    mutationFn: async (studentId: string) => {
+      // Call backend API to restore/reactivate student
+      await fetch(`/api/admin/students/${studentId}/restore`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast.success("Student reactivated successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to reactivate student",
+      );
+    },
+  });
   const toast = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -92,6 +110,7 @@ const AdminStudentsListPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [roomFilter, setRoomFilter] = useState("ALL");
   const [slotFilter, setSlotFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -113,6 +132,7 @@ const AdminStudentsListPage: React.FC = () => {
       "students",
       debouncedSearch,
       statusFilter,
+      roomFilter,
       slotFilter,
       currentPage,
     ],
@@ -122,6 +142,7 @@ const AdminStudentsListPage: React.FC = () => {
         page: currentPage,
         limit: 10,
         status: statusFilter !== "ALL" ? statusFilter : undefined,
+        roomId: roomFilter !== "ALL" ? roomFilter : undefined,
         slotId: slotFilter !== "ALL" ? slotFilter : undefined,
       };
       const res = await getStudents(params);
@@ -169,8 +190,16 @@ const AdminStudentsListPage: React.FC = () => {
     queryKey: ["slots"],
     queryFn: async () => {
       const res = await getAllSlots();
-      console.log("Slots API Response:", res); // Debug log
       return res ?? [];
+    },
+  });
+
+  // Fetch rooms for filter
+  const { data: roomsData } = useQuery({
+    queryKey: ["rooms"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/rooms");
+      return res.data.data ?? [];
     },
   });
 
@@ -357,6 +386,32 @@ const AdminStudentsListPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Room Filter */}
+          <Select value={roomFilter} onValueChange={(val) => {
+            setRoomFilter(val);
+            setSlotFilter("ALL");
+            setCurrentPage(1);
+          }}>
+            <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-xl shadow-sm font-medium border-slate-200 bg-white">
+              <SelectValue placeholder="All Rooms" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-[300px]">
+              <SelectItem value="ALL" className="rounded-lg font-medium">
+                All Rooms
+              </SelectItem>
+              {Array.isArray(roomsData) &&
+                roomsData.map((room: any) => (
+                  <SelectItem
+                    key={room._id}
+                    value={room._id}
+                    className="rounded-lg font-medium"
+                  >
+                    {room.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+
           {/* Slot Filter */}
           <Select value={slotFilter} onValueChange={setSlotFilter}>
             <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-xl shadow-sm font-medium border-slate-200 bg-white">
@@ -418,7 +473,7 @@ const AdminStudentsListPage: React.FC = () => {
                   Status
                 </TableHead>
                 <TableHead className="font-black text-[10px] text-slate-400 uppercase tracking-[0.2em]">
-                  Slot
+                  Allocation
                 </TableHead>
                 <TableHead className="font-black text-[10px] text-slate-400 uppercase tracking-[0.2em]">
                   Balance
@@ -436,83 +491,115 @@ const AdminStudentsListPage: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                students.map((student: Student) => (
-                  <TableRow
-                    key={student._id || student.id}
-                    className="group hover:bg-slate-50/50 transition-colors"
-                  >
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                          {student.name?.charAt(0) || "?"}
+                students
+                  .filter((student: Student) =>
+                    statusFilter === "ALL"
+                      ? true
+                      : student.status === statusFilter,
+                  )
+                  .map((student: Student) => (
+                    <TableRow
+                      key={student._id || student.id}
+                      className="group hover:bg-slate-50/50 transition-colors"
+                    >
+                      <TableCell className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                            {student.name?.charAt(0) || "?"}
+                          </div>
+                          <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
+                            {student.name}
+                          </p>
                         </div>
-                        <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
-                          {student.name}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-0.5">
-                        <div className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
-                          <Mail size={12} className="text-slate-400" />
-                          {student.email || "—"}
-                          {student.emailVerified && (
-                            <div className="h-3 w-3 bg-blue-500 rounded-full flex items-center justify-center">
-                              <ShieldCheck size={8} className="text-white" />
-                            </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          <div className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+                            <Mail size={12} className="text-slate-400" />
+                            {student.email || "—"}
+                            {student.emailVerified && (
+                              <div className="h-3 w-3 bg-blue-500 rounded-full flex items-center justify-center">
+                                <ShieldCheck size={8} className="text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-[10px] font-medium text-slate-400 flex items-center gap-1.5">
+                            <Phone size={12} className="text-slate-400" />
+                            {student.phone || "—"}
+                            {student.phoneVerified && (
+                              <div className="h-3 w-3 bg-emerald-500 rounded-full flex items-center justify-center">
+                                <ShieldCheck size={8} className="text-white" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={getStatusStyles(
+                            student.status || "INACTIVE",
                           )}
+                        >
+                          {student.status || "INACTIVE"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2 text-blue-600">
+                             <span className="text-[10px] font-black uppercase tracking-tighter">
+                               {typeof student.slotId === "object" && (student.slotId as any).roomId?.name || "Global"}
+                             </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <LayoutGrid size={14} className="text-slate-400" />
+                            <span className="text-xs font-bold text-slate-900">
+                              {typeof student.slotId === "object"
+                                ? (student.slotId as any).name
+                                : student.slotId || "Unassigned"}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-[10px] font-medium text-slate-400 flex items-center gap-1.5">
-                          <Phone size={12} className="text-slate-400" />
-                          {student.phone || "—"}
-                          {student.phoneVerified && (
-                            <div className="h-3 w-3 bg-emerald-500 rounded-full flex items-center justify-center">
-                              <ShieldCheck size={8} className="text-white" />
-                            </div>
-                          )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          <p
+                            className={`text-xs font-black ${(student.totalDue || 0) > 0 ? "text-rose-600" : "text-emerald-600"}`}
+                          >
+                            ₹{student.totalDue || 0}
+                          </p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                            Outstanding
+                          </p>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getStatusStyles(
-                          student.status || "INACTIVE",
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        {student.status === "ARCHIVED" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => {
+                              const id =
+                                typeof student._id === "string"
+                                  ? student._id
+                                  : student.id;
+                              if (id) restoreMutation.mutate(id);
+                            }}
+                          >
+                            Restore
+                          </Button>
+                        ) : (
+                          <ActionDropdown
+                            student={student}
+                            onArchive={(s) =>
+                              setArchiveDialog({ open: true, student: s })
+                            }
+                            navigate={navigate}
+                          />
                         )}
-                      >
-                        {student.status || "INACTIVE"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <LayoutGrid size={14} className="text-slate-400" />
-                        <span className="text-xs font-bold text-slate-600">
-                          {typeof student.slotId === "object"
-                            ? student.slotId?.name
-                            : student.slotId || "Unassigned"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                       <div className="space-y-0.5">
-                         <p className={`text-xs font-black ${(student.totalDue || 0) > 0 ? "text-rose-600" : "text-emerald-600"}`}>
-                           ₹{student.totalDue || 0}
-                         </p>
-                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                           Outstanding
-                         </p>
-                       </div>
-                    </TableCell>
-                    <TableCell className="text-right pr-6">
-                      <ActionDropdown
-                        student={student}
-                        onArchive={(s) =>
-                          setArchiveDialog({ open: true, student: s })
-                        }
-                        navigate={navigate}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                    </TableRow>
+                  ))
               )}
             </TableBody>
           </Table>

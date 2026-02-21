@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 // Shadcn UI Components
 import { Button } from "../../../components/ui/button";
@@ -50,6 +50,7 @@ type FormValues = z.infer<typeof schema>;
 
 const StudentOtpForm: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { mutate, status, error, data } = useVerifyStudentOtp();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +58,7 @@ const StudentOtpForm: React.FC = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      email: "",
+      email: location.state?.email || "",
       otp: "",
       setPassword: "",
     },
@@ -157,7 +158,7 @@ const StudentOtpForm: React.FC = () => {
             render={({ field }) => (
               <FormItem className="space-y-1">
                 <FormLabel className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  New Access Key (Optional)
+                  New Access Key {location.state?.email ? "(Required for Setup)" : "(Optional)"}
                 </FormLabel>
                 <FormControl>
                   <div className="relative group">

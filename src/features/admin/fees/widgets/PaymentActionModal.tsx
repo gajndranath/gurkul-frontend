@@ -190,7 +190,7 @@ const PaymentActionModal: React.FC<PaymentActionModalProps> = ({
               Collection Channel
             </label>
             <div className="grid grid-cols-2 gap-3">
-              {["CASH", "UPI", "BANK_TRANSFER", "ADVANCE"].map((method) => (
+              {["CASH", "UPI", "BANK_TRANSFER"].map((method) => (
                 <label
                   key={method}
                   className={`
@@ -217,7 +217,7 @@ const PaymentActionModal: React.FC<PaymentActionModalProps> = ({
           </div>
 
           {/* ✅ Transaction ID - Conditional: Only show for non-CASH */}
-          {selectedMethod !== "CASH" && selectedMethod !== "ADVANCE" && (
+          {selectedMethod !== "CASH" && (
             <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                 Transaction Registry ID
@@ -227,19 +227,6 @@ const PaymentActionModal: React.FC<PaymentActionModalProps> = ({
                 placeholder="UPI ID / Bank Ref / Cheque No."
                 className="rounded-2xl h-12 border-none bg-slate-50 text-xs font-bold"
               />
-            </div>
-          )}
-
-          {/* ✅ Advance Payment Note */}
-          {selectedMethod === "ADVANCE" && (
-            <div className="p-4 bg-blue-50 rounded-[24px] flex gap-3 items-start border border-blue-100">
-              <CreditCard className="h-5 w-5 text-blue-600 shrink-0" />
-              <p className="text-[10px] text-blue-700 font-bold leading-relaxed">
-                Advance payment will be added to student's advance balance.
-                <span className="block text-blue-600/80 text-[9px] mt-1.5 font-medium">
-                  Available advance will be shown in student ledger.
-                </span>
-              </p>
             </div>
           )}
 

@@ -15,6 +15,8 @@ import { useSessionStore } from "../stores/sessionStore";
 import SlotManagementPage from "../features/admin/slots/SlotManagementPage";
 import { Loader } from "lucide-react";
 import FeeManagementPage from "../features/admin/fees/FeeManagementPage";
+import RoomManagementPage from "../features/admin/rooms/RoomManagementPage";
+
 
 // Lazy load feature modules
 const AdminDashboardPage = lazy(
@@ -311,6 +313,18 @@ const routes: RouteObject[] = [
         ),
       },
       {
+        path: "rooms",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <RoomManagementPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "slots",
         element: (
           <ProtectedRoute allowedRole="ADMIN">
@@ -322,6 +336,7 @@ const routes: RouteObject[] = [
           </ProtectedRoute>
         ),
       },
+
       {
         path: "fees",
         element: (

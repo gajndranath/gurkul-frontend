@@ -9,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock, Armchair, CheckCircle2, X, Settings2 } from "lucide-react";
 import { slotSchema, type SlotFormValues } from "../types/slotForm.types";
 import { useSlots } from "../hooks/useSlots";
+import { useRooms } from "../../rooms/hooks/useRooms";
+
 
 import {
   Dialog,
@@ -31,6 +33,8 @@ const SlotFormModal: React.FC<SlotFormModalProps> = ({
   initialData,
 }) => {
   const { createSlot, updateSlot, isSaving } = useSlots();
+  const { rooms } = useRooms();
+
 
   const {
     register,
@@ -42,10 +46,13 @@ const SlotFormModal: React.FC<SlotFormModalProps> = ({
     resolver: zodResolver(slotSchema) as Resolver<SlotFormValues>,
     defaultValues: initialData || {
       name: "",
+      roomId: "",
+      slotType: "PARTIAL",
       timeRange: { start: "09:00", end: "18:00" },
       monthlyFee: 500,
       totalSeats: 50,
     },
+
   });
 
   const watchedValues = useWatch({ control });
@@ -62,7 +69,12 @@ const SlotFormModal: React.FC<SlotFormModalProps> = ({
         label: "Capacity > 0",
         met: (Number(watchedValues.totalSeats) || 0) >= 1,
       },
+      {
+        label: "Room Selected",
+        met: !!watchedValues.roomId,
+      },
     ],
+
     [watchedValues],
   );
 
@@ -125,6 +137,44 @@ const SlotFormModal: React.FC<SlotFormModalProps> = ({
               </p>
             )}
           </div>
+
+          {/* Room & Slot Type Selection */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] ml-1">
+                Assign to Room
+              </label>
+              <select
+                {...register("roomId")}
+                className="w-full h-11 rounded-xl border-slate-100 bg-slate-50/50 font-bold text-sm px-3 focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 outline-none"
+              >
+                <option value="">Select Room</option>
+                {rooms?.map((r) => (
+                  <option key={r._id} value={r._id}>
+                    {r.name} ({r.totalSeats} Seats)
+                  </option>
+                ))}
+              </select>
+              {errors.roomId && (
+                <p className="text-rose-500 text-[10px] font-bold">
+                  {errors.roomId.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] ml-1">
+                Shift Type
+              </label>
+              <select
+                {...register("slotType")}
+                className="w-full h-11 rounded-xl border-slate-100 bg-slate-50/50 font-bold text-sm px-3 focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 outline-none"
+              >
+                <option value="PARTIAL">Partial Shift</option>
+                <option value="FULL_DAY">Full Day (Global)</option>
+              </select>
+            </div>
+          </div>
+
 
           {/* Time Selection Grid */}
           <div className="grid grid-cols-2 gap-3">

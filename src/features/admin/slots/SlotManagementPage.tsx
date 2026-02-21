@@ -12,6 +12,15 @@ import { useSlots } from "./hooks/useSlots";
 import SlotCardWidget from "./widgets/SlotCardWidget";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SeatMap } from "./widgets/SeatMap";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
+
+
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +33,9 @@ const SlotManagementPage: React.FC = () => {
   const { slots, isLoading, isError, error, refetch } = useSlots();
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editSlot, setEditSlot] = useState<Slot | null>(null);
+  const [viewSeatMapId, setViewSeatMapId] = useState<string | null>(null);
+
 
   const filteredSlots = useMemo(() => {
     return (slots || []).filter((s: Slot) =>
@@ -77,7 +89,10 @@ const SlotManagementPage: React.FC = () => {
         </div>
 
         <Button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditSlot(null);
+            setIsModalOpen(true);
+          }}
           className="w-full sm:w-auto gap-2"
         >
           <Plus className="h-4 w-4" />
@@ -126,7 +141,15 @@ const SlotManagementPage: React.FC = () => {
         {filteredSlots.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
             {filteredSlots.map((slot: Slot) => (
-              <SlotCardWidget key={slot._id} slot={slot} />
+              <SlotCardWidget
+                key={slot._id}
+                slot={slot}
+                onEdit={() => {
+                  setEditSlot(slot);
+                  setIsModalOpen(true);
+                }}
+                onViewMap={() => setViewSeatMapId(slot._id || null)}
+              />
             ))}
           </div>
         ) : (
@@ -165,11 +188,33 @@ const SlotManagementPage: React.FC = () => {
         {isModalOpen && (
           <SlotFormModal
             isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            onClose={() => {
+              setIsModalOpen(false);
+              setEditSlot(null);
+            }}
+            initialData={
+              editSlot as unknown as
+                | import("./types/slotForm.types").SlotFormValues
+                | undefined
+            }
           />
         )}
       </Suspense>
+       {/* Seat Map Modal */}
+      {viewSeatMapId && (
+        <Dialog open={!!viewSeatMapId} onOpenChange={() => setViewSeatMapId(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[32px] p-8 border-none shadow-2xl">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
+                Shift Occupancy Map
+              </DialogTitle>
+            </DialogHeader>
+            <SeatMap slotId={viewSeatMapId} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
+
   );
 };
 

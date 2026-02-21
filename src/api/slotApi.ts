@@ -12,7 +12,10 @@ export interface Slot {
   monthlyFee: number;
   totalSeats: number;
   isActive: boolean;
+  roomId: string;
+  slotType: "FULL_DAY" | "PARTIAL";
   occupiedSeats?: number;
+
   availableSeats?: number;
   occupancyPercentage?: number;
 }
@@ -47,3 +50,9 @@ export const deactivateSlot = async (slotId: string) => {
   const { data } = await axiosInstance.delete(`/slots/${slotId}`);
   return data.data;
 };
+
+export const getSeatChart = async (slotId: string) => {
+  const { data } = await axiosInstance.get(`/slots/${slotId}/seat-chart`);
+  return data.data;
+};
+

@@ -17,7 +17,9 @@ import {
   Clock,
   PieChart,
   CalendarCheck,
+  Home,
 } from "lucide-react";
+
 
 const studentMenu = [
   {
@@ -47,7 +49,11 @@ const adminMenu = [
     path: "/admin/students",
     icon: <Users size={18} />,
   },
+  { label: "Manage Rooms", path: "/admin/rooms", icon: <Home size={18} /> },
   { label: "Manage Slots", path: "/admin/slots", icon: <Armchair size={18} /> },
+
+
+
   {
     label: "Fee Management",
     path: "/admin/fees",
@@ -135,14 +141,17 @@ const Sidebar: React.FC = memo(() => {
 
             <div className="space-y-1.5">
               {topMenu.map((item) => {
-                const isActive = location.pathname.startsWith(item.path);
+                const isActive = item.path ? location.pathname.startsWith(item.path) : false;
                 return (
                   <button
                     key={item.label}
                     onClick={() => {
-                      navigate(item.path);
-                      closeSidebar();
+                      if (item.path) {
+                        navigate(item.path);
+                        closeSidebar();
+                      }
                     }}
+
                     className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 ${
                       isActive
                         ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
@@ -172,10 +181,10 @@ const Sidebar: React.FC = memo(() => {
           </div>
 
           <div className="space-y-4 pt-4 border-t border-slate-50">
-            {settingsItem && (
+            {settingsItem?.path && (
               <button
                 onClick={() => {
-                  navigate(settingsItem.path);
+                  navigate(settingsItem.path!);
                   closeSidebar();
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
@@ -197,6 +206,7 @@ const Sidebar: React.FC = memo(() => {
                 </span>
               </button>
             )}
+
             <button
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-500 hover:bg-rose-50 font-black transition-all group"
               onClick={handleLogout}

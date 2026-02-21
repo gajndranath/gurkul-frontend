@@ -6,7 +6,9 @@ import {
   IndianRupee,
   Users2,
   ArrowUpRight,
+  Armchair,
 } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -24,9 +26,12 @@ import SlotDetailWidget from "../widgets/SlotDetailWidget";
 
 interface SlotCardProps {
   slot: Slot;
+  onEdit?: () => void;
+  onViewMap?: () => void;
 }
 
-const SlotCardWidget: React.FC<SlotCardProps> = memo(({ slot }) => {
+const SlotCardWidget: React.FC<SlotCardProps> = memo(({ slot, onEdit, onViewMap }) => {
+
   const [showDetails, setShowDetails] = useState(false);
   const prefetchSlot = usePrefetchSlot();
 
@@ -91,9 +96,25 @@ const SlotCardWidget: React.FC<SlotCardProps> = memo(({ slot }) => {
                     align="end"
                     className="rounded-2xl p-1.5 border-slate-100 shadow-2xl ring-1 ring-black/5"
                   >
-                    <DropdownMenuItem className="gap-2.5 font-bold text-xs rounded-xl cursor-pointer py-2.5 text-slate-600 focus:text-blue-600 focus:bg-blue-50">
+                    <DropdownMenuItem
+                      className="gap-2.5 font-bold text-xs rounded-xl cursor-pointer py-2.5 text-slate-600 focus:text-blue-600 focus:bg-blue-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewMap?.();
+                      }}
+                    >
+                      <Armchair size={16} /> View Occupancy Map
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="gap-2.5 font-bold text-xs rounded-xl cursor-pointer py-2.5 text-slate-600 focus:text-blue-600 focus:bg-blue-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit?.();
+                      }}
+                    >
                       <Edit3 size={16} /> Edit Configuration
                     </DropdownMenuItem>
+
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

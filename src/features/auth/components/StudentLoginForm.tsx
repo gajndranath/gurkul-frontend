@@ -31,8 +31,9 @@ import {
 } from "lucide-react";
 
 // Stores & Hooks
-import { useLoginStudent } from "../hooks/useStudentAuth";
+import { useLoginStudent, useRequestStudentOtp } from "../hooks/useStudentAuth";
 import { useSessionStore } from "../../../stores/sessionStore";
+import { useToast } from "../../../hooks/useToast";
 
 const schema = z.object({
   email: z.string().email({ message: "Identity mail is required." }),
@@ -43,7 +44,9 @@ type FormValues = z.infer<typeof schema>;
 
 const StudentLoginForm: React.FC = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const { mutate, status, error } = useLoginStudent();
+  const { mutate: requestOtp, status: otpStatus } = useRequestStudentOtp();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -58,6 +61,27 @@ const StudentLoginForm: React.FC = () => {
     mutate(data, {
       onSuccess: () => navigate("/student/dashboard", { replace: true }),
     });
+  };
+
+  const onSetupPassword = () => {
+    const email = form.getValues("email");
+    if (!email) {
+      toast.error("Please enter your identity mail first.");
+      return;
+    }
+
+    requestOtp(
+      { email, purpose: "LOGIN" },
+      {
+        onSuccess: () => {
+          toast.success("OTP sent for password setup.");
+          navigate("/student/verify-otp", { state: { email } });
+        },
+        onError: (err: any) => {
+          toast.error(err?.response?.data?.message || "Failed to send OTP.");
+        },
+      },
+    );
   };
 
   return (
@@ -167,12 +191,31 @@ const StudentLoginForm: React.FC = () => {
 
           {/* Operational Error Feed */}
           {error && (
-            <div className="bg-rose-50 p-3 rounded-2xl border border-rose-100 flex items-center gap-3 animate-in slide-in-from-top-2">
-              <AlertCircle size={14} className="text-rose-600 shrink-0" />
-              <p className="text-[10px] font-black text-rose-600 uppercase tracking-tighter leading-tight">
-                {(error as AxiosError<{ message?: string }>)?.response?.data
-                  ?.message || "Terminal Error: Access Denied"}
-              </p>
+            <div className="bg-rose-50 p-3 rounded-2xl border border-rose-100 flex flex-col gap-2 animate-in slide-in-from-top-2">
+              <div className="flex items-center gap-3">
+                <AlertCircle size={14} className="text-rose-600 shrink-0" />
+                <p className="text-[10px] font-black text-rose-600 uppercase tracking-tighter leading-tight">
+                  {(error as AxiosError<{ message?: string }>)?.response?.data
+                    ?.message || "Terminal Error: Access Denied"}
+                </p>
+              </div>
+              
+              {(error as AxiosError<{ message?: string }>)?.response?.data?.message?.includes("Password not set") && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={otpStatus === "pending"}
+                  onClick={onSetupPassword}
+                  className="w-full h-8 border-rose-200 text-rose-700 hover:bg-rose-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                >
+                  {otpStatus === "pending" ? (
+                    <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin" />
+                  ) : (
+                    "Initialize Password Setup"
+                  )}
+                </Button>
+              )}
             </div>
           )}
 

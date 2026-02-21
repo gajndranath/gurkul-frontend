@@ -24,6 +24,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { SeatMap } from "../../../slots/widgets/SeatMap";
+import { Badge } from "@/components/ui/badge";
+
+
 
 import type { UseFormReturn } from "react-hook-form";
 import type { StudentFormValues } from "../type/AdminStudentForm.types";
@@ -35,6 +39,11 @@ type Slot = {
   monthlyFee?: number;
   totalSeats?: number;
   availableSeats?: number;
+  isActive?: boolean;
+  roomId?: {
+    _id: string;
+    name: string;
+  } | string;
 };
 
 // Type for nested data structure
@@ -166,21 +175,33 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
                   sideOffset={4}
                 >
                   {slots.length > 0 ? (
-                    slots.map((slot) => (
-                      <SelectItem
-                        key={slot._id}
-                        value={slot._id}
-                        className="font-bold py-3 focus:bg-blue-50 focus:text-blue-600 rounded-lg cursor-pointer"
-                      >
-                        <div className="flex flex-col">
-                          <span className="text-sm">{slot.name}</span>
-                          <span className="text-[9px] text-slate-400 font-medium lowercase">
-                            {slot.timeRange?.start || "—"} -{" "}
-                            {slot.timeRange?.end || "—"}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))
+                    slots.map((slot) => {
+                      const roomName = (typeof slot.roomId === 'object' && slot.roomId?.name) || "Global";
+                      const slotDisplayName = `${roomName} — ${slot.name}`;
+                      
+                      return (
+                        <SelectItem
+                          key={slot._id}
+                          value={slot._id}
+                          className="font-bold py-3 focus:bg-blue-50 focus:text-blue-600 rounded-lg cursor-pointer"
+                        >
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{slotDisplayName}</span>
+                              {!slot.isActive && (
+                                <Badge variant="outline" className="text-[7px] py-0 h-3 border-slate-200 bg-slate-50 text-slate-400">
+                                  Inactive
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-[9px] text-slate-400 font-medium lowercase">
+                              {slot.timeRange?.start || "—"} -{" "}
+                              {slot.timeRange?.end || "—"}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })
                   ) : (
                     <div className="p-4 text-xs font-bold text-slate-400 text-center">
                       No slots available
@@ -193,15 +214,16 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
           )}
         />
 
-        {/* Designated Seat */}
+        {/* Designated Seat (Read-only since we use Map) */}
         <div className="space-y-2">
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5">
-            <Armchair size={12} className="text-blue-500" /> Designated Seat
+            <Armchair size={12} className="text-blue-500" /> Selected Seat
           </label>
           <Input
-            placeholder="e.g. A-12"
+            placeholder="Select from map below"
             {...register("seatNumber")}
-            className="h-12 rounded-xl border-slate-200 bg-white font-bold focus:ring-2 focus:ring-blue-600/20 transition-all shadow-sm hover:bg-slate-50/50"
+            readOnly
+            className="h-12 rounded-xl border-slate-200 bg-slate-50 font-black focus:ring-0 transition-all shadow-sm cursor-not-allowed text-blue-600"
           />
           {errors.seatNumber && (
             <p className="text-rose-500 text-[10px] font-bold ml-1">
@@ -209,6 +231,7 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
             </p>
           )}
         </div>
+
 
         {/* Monthly Fee */}
         <div className="space-y-2">
@@ -251,6 +274,24 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
           )}
         </div>
       </div>
+
+      {/* Visual Seat Selection */}
+      {selectedSlotId && (
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5">
+            <LayoutGrid size={12} className="text-blue-500" /> Interactive Seat Map
+          </label>
+          <div className="p-1 bg-white rounded-[32px] ring-1 ring-slate-200 shadow-sm overflow-hidden">
+            <SeatMap 
+              slotId={selectedSlotId} 
+              onSeatSelect={(seat: string) => setValue("seatNumber", seat, { shouldValidate: true, shouldDirty: true })}
+              selectedSeat={form.getValues("seatNumber")}
+            />
+
+          </div>
+        </div>
+      )}
+
 
       {/* Preview Widget - Only show if slot selected */}
       {selectedSlot && (
