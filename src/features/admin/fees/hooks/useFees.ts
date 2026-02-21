@@ -18,7 +18,7 @@ export const useFeeSummary = (studentId: string) => {
   });
 };
 
-/** ✅ Hook for full-year fee calendar grid */
+/** ✅ Hook for fee calendar grid */
 export const useFeeCalendar = (studentId: string, year?: number) => {
   return useQuery({
     queryKey: ["fees", "calendar", studentId, year],
@@ -27,6 +27,14 @@ export const useFeeCalendar = (studentId: string, year?: number) => {
   });
 };
 
+/** ✅ Hook for admin overdue summary dashboard */
+export const useOverdueSummary = () => {
+  return useQuery({
+    queryKey: ["fees", "overdue-summary"],
+    queryFn: feeApi.getOverdueSummary,
+    refetchInterval: 5 * 60 * 1000, // auto-refresh every 5 min
+  });
+};
 
 export const usePaymentActions = (studentId: string) => {
   const queryClient = useQueryClient();

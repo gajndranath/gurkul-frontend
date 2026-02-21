@@ -1,7 +1,5 @@
 import axiosInstance from "./axiosInstance";
-import type {
-  StudentListResponse,
-} from "../features/admin/students/types";
+import type { StudentListResponse } from "../features/admin/students/types";
 
 // Inline StudentFormData type to avoid import issues
 export type StudentFormData = {

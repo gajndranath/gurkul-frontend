@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import FeeDashboardWidget from "./widgets/FeeDashboardWidget";
+import OverdueSummaryWidget from "./widgets/OverdueSummaryWidget";
 import { CreditCard, Loader2, ShieldCheck } from "lucide-react";
 import { Separator } from "../../../components/ui/separator";
 
@@ -56,6 +57,8 @@ const FeeManagementPage: React.FC = () => {
           <Separator className="flex-1 opacity-50" />
         </div>
         <FeeDashboardWidget />
+        {/* Overdue Summary Widget: Shows all students with outstanding dues */}
+        <OverdueSummaryWidget />
       </section>
 
       {/* 3. OPERATIONS LAYER: Active Ledger */}

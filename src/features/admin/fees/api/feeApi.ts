@@ -124,3 +124,40 @@ export const getFeeCalendar = async (studentId: string, year?: number) => {
   };
 };
 
+export interface OverdueStudent {
+  dueRecordId: string;
+  studentId: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  libraryId?: string;
+  monthlyFee: number;
+  monthsDue: string[];
+  totalDueAmount: number;
+  daysOverdue: number;
+  lastReminderSentAt?: string | null;
+  nextReminderDue?: string | null;
+  reminderCount: number;
+  escalationLevel: number;
+  urgency: "green" | "mild" | "yellow" | "orange" | "red" | "critical";
+  dueSince?: string | null;
+}
+
+export interface OverdueSummaryResponse {
+  students: OverdueStudent[];
+  totals: {
+    totalStudentsOverdue: number;
+    totalOutstandingAmount: number;
+    critical: number;
+    red: number;
+    orange: number;
+    yellow: number;
+    mild: number;
+  };
+}
+
+/** ✅ Get all students with overdue fees, sorted worst-first */
+export const getOverdueSummary = async (): Promise<OverdueSummaryResponse> => {
+  const { data } = await axiosInstance.get("/fees/overdue-summary");
+  return data.data as OverdueSummaryResponse;
+};
