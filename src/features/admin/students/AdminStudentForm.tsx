@@ -43,7 +43,8 @@ const AdminStudentForm: React.FC = () => {
   const { registerStudent, updateStudent } = useStudentMutations();
   const isEditMode = Boolean(id);
 
-  const studentData = studentResponse?.data?.student;
+  // getStudent returns data.data → { student, feeSummary } directly
+  const studentData = studentResponse?.student;
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),

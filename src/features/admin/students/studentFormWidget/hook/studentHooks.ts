@@ -21,13 +21,13 @@ export function useSlots() {
 }
 
 export function useStudent(id?: string) {
-  return useQuery({
+  return useQuery<SingleStudentResponse["data"] | null>({
     queryKey: ["student", id],
     queryFn: async () => {
       if (!id) return null;
+      // getStudent returns data.data → { student, feeSummary } directly
       const response = await getStudent(id);
-      console.log("Raw student API response:", response); // Debug log
-      return response as unknown as SingleStudentResponse;
+      return response as SingleStudentResponse["data"];
     },
     enabled: !!id,
   });
