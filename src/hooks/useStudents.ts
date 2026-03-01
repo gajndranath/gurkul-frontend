@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getStudents } from "../api/studentsAdminApi";
 // Import the specific params type here
 import type { GetStudentsParams } from "../api/studentsAdminApi";
-import type { StudentListResponse } from "../features/students/types";
+import type { StudentListResponse } from "../features/admin/students/types";
 
 export const useStudents = (params?: GetStudentsParams) => {
   return useQuery<StudentListResponse, Error>({

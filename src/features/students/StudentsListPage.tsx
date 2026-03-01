@@ -21,7 +21,7 @@ import { useToast } from "../../hooks/useToast";
 import { useDebounce } from "../../hooks/useDebounce";
 import { getStudents, archiveStudent } from "../../api/studentsAdminApi";
 import { getAllSlots } from "../../api/slotApi";
-import type { Student } from "./types";
+import type { Student } from "../../features/admin/students/types";
 
 interface Slot {
   _id: string;
@@ -225,7 +225,7 @@ const StudentsListPage: React.FC = () => {
                 </thead>
                 <tbody>
                   {studentsData.students.map((student: Student) => (
-                    <tr key={student.id} className="border-b">
+                    <tr key={student._id || student.id} className="border-b">
                       <td className="py-2">{student.name}</td>
                       <td className="py-2">
                         <Badge
@@ -287,7 +287,7 @@ const StudentsListPage: React.FC = () => {
               disabled={archiveMutation.isPending}
               onClick={() =>
                 archiveDialog.student &&
-                archiveMutation.mutate(archiveDialog.student.id)
+                archiveMutation.mutate(archiveDialog.student.id || archiveDialog.student._id || "")
               }
             >
               {archiveMutation.isPending ? "Archiving..." : "Confirm"}

@@ -109,7 +109,7 @@ const AddAdvanceModal: React.FC<AddAdvanceModalProps> = ({
 
     try {
       await addAdvanceMutation.mutateAsync({
-        studentId: selectedStudent._id || selectedStudent.id,
+        studentId: selectedStudent._id || selectedStudent.id || "",
         amount,
         remarks: remarks || undefined,
       });

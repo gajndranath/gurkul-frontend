@@ -63,7 +63,7 @@ export const useAllAdvanceBalances = () => {
           students.map(async (student: Student) => {
             try {
               const summary = await feeApi.getFeeSummary(
-                student._id || student.id,
+                student._id || student.id || "",
               );
               return { student, summary };
             } catch {
@@ -81,7 +81,7 @@ export const useAllAdvanceBalances = () => {
               (item.summary.advance?.remainingAmount || 0) > 0,
           )
           .map(({ student, summary }) => ({
-            studentId: student._id || student.id,
+            studentId: student._id || student.id || "",
             studentName: student.name,
             studentPhone: student.phone || "",
             totalAmount: summary.advance?.totalAmount || 0,
