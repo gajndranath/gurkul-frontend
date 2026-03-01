@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { Plus, Search, Layers, ShieldCheck, Loader2 } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Plus, ShieldCheck, Loader2, Home, Database, Users2, Activity, Layers, Search } from "lucide-react";
 import { useRooms } from "./hooks/useRooms";
+import { useSlots } from "../slots/hooks/useSlots"; // Added to calculate stats
 import { RoomFormModal } from "./widgets/RoomFormModal";
+import { RoomDetailWidget } from "./widgets/RoomDetailWidget";
 import RoomCardWidget from "./widgets/RoomCardWidget";
 import type { Room, RoomFormData } from "./types/room.types";
 
@@ -12,18 +14,35 @@ import {
   Card, 
   CardContent 
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 const RoomManagementPage: React.FC = () => {
-  const { rooms, isLoading, createRoom, updateRoom, deleteRoom, isCreating, isUpdating } = useRooms();
+  const { rooms, isLoading: roomsLoading, createRoom, updateRoom, deleteRoom, isCreating, isUpdating } = useRooms();
+  const { slots, isLoading: slotsLoading } = useSlots();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
+  const [viewRoom, setViewRoom] = useState<Room | null>(null);
   const [search, setSearch] = useState("");
 
-  const filteredRooms = (rooms || []).filter(r => 
+  const isLoading = roomsLoading || slotsLoading;
+
+  const filteredRooms = useMemo(() => (rooms || []).filter(r => 
     r.name.toLowerCase().includes(search.toLowerCase())
-  );
+  ), [rooms, search]);
+
+  const stats = useMemo(() => {
+    const totalRooms = rooms?.length || 0;
+    const activeRooms = rooms?.filter(r => r.isActive).length || 0;
+    const totalCapacity = rooms?.reduce((acc, r) => acc + (r.totalSeats || 0), 0) || 0;
+    const totalSlots = slots?.length || 0;
+
+    return [
+      { label: "Total Halls", value: totalRooms, icon: Home, color: "text-blue-600", bg: "bg-blue-50" },
+      { label: "Active Units", value: activeRooms, icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50" },
+      { label: "System Capacity", value: totalCapacity, icon: Users2, color: "text-indigo-600", bg: "bg-indigo-50" },
+      { label: "Total Shifts", value: totalSlots, icon: Layers, color: "text-amber-600", bg: "bg-amber-50" },
+    ];
+  }, [rooms, slots]);
 
   const handleCreate = async (data: RoomFormData) => {
     await createRoom(data);
@@ -62,29 +81,45 @@ const RoomManagementPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-10 space-y-10">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest rounded-full border-blue-100 bg-blue-50/50 text-blue-600 px-3 py-1">
-              Infrastructure Core
-            </Badge>
+      {/* Unified Header */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-blue-600 mb-1">
+            <div className="p-1.5 bg-blue-50 rounded-lg ring-1 ring-blue-100">
+              <Database size={16} />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest">Infrastructure Hub</span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase">
-            Room <span className="text-blue-600">Inventory</span>
-          </h1>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] max-w-md">
-            Architect your physical library presence through optimized spatial definitions and density control.
-          </p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Room <span className="text-blue-600">Inventory</span></h1>
+          <p className="text-slate-500 font-medium text-xs">Architect your physical library presence and density control.</p>
         </div>
 
-        <Button 
-          onClick={openCreateModal} 
-          className="w-full sm:w-auto h-14 px-8 rounded-[20px] bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl shadow-blue-200/50 gap-3 active:scale-95 transition-all"
-        >
-          <Plus className="h-5 w-5" /> New Space Configuration
-        </Button>
-      </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Button 
+            onClick={openCreateModal} 
+            className="flex-1 sm:flex-none h-14 bg-slate-900 hover:bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-slate-200 px-8 uppercase text-[10px] tracking-widest transition-all"
+          >
+            <Plus size={18} className="mr-2" /> New Space
+          </Button>
+        </div>
+      </header>
+
+      {/* Snapshot Stats Section */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {stats.map((stat, i) => (
+          <Card key={i} className="border-none ring-1 ring-slate-100 shadow-sm rounded-[32px] overflow-hidden group hover:ring-blue-200 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.color}`}>
+                  <stat.icon size={18} />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</span>
+              </div>
+              <p className="text-3xl font-black text-slate-900 tracking-tighter italic">{stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
 
       {/* Global Context & Control */}
       <Card className="border-none shadow-sm bg-slate-50/50 rounded-[32px] overflow-hidden p-1">
@@ -132,6 +167,7 @@ const RoomManagementPage: React.FC = () => {
                 room={room}
                 onEdit={() => openEditModal(room)}
                 onDelete={() => handleDelete(room._id)}
+                onViewDetails={() => setViewRoom(room)}
               />
             ))}
           </div>
@@ -169,6 +205,12 @@ const RoomManagementPage: React.FC = () => {
         onSubmit={selectedRoom ? handleUpdate : handleCreate}
         initialData={selectedRoom}
         isSubmitting={isCreating || isUpdating}
+      />
+
+      <RoomDetailWidget
+        isOpen={!!viewRoom}
+        onClose={() => setViewRoom(null)}
+        room={viewRoom}
       />
     </div>
   );

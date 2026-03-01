@@ -31,21 +31,24 @@ const AdminProfilePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 md:p-10 space-y-8">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-blue-600 mb-2">
-          <div className="p-1.5 bg-blue-50 rounded-lg ring-1 ring-blue-100">
-            <ShieldCheck size={18} />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-blue-600 mb-2">
+            <div className="p-1.5 bg-blue-50 rounded-lg ring-1 ring-blue-100">
+              <ShieldCheck size={18} />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+              System Identity
+            </span>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-            System Identity
-          </span>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">
+            My Registry
+          </h1>
+          <p className="text-slate-500 font-medium">
+            Manage your administrative profile and credentials.
+          </p>
         </div>
-        <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
-          My Registry
-        </h1>
-        <p className="text-slate-500 font-medium">
-          Manage your administrative profile and credentials.
-        </p>
+
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

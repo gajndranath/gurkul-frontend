@@ -10,7 +10,9 @@ export interface Slot {
   monthlyFee: number;
   totalSeats: number;
   isActive: boolean;
-  occupiedSeats?: number; // Make it optional with ?
+  roomId: string;
+  slotType: "FULL_DAY" | "PARTIAL";
+  occupiedSeats?: number;
   availableSeats?: number; // Make these optional too if needed
   occupancyPercentage?: number;
 }

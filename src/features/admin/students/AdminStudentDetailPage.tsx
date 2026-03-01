@@ -18,6 +18,7 @@ import {
   User,
   CheckCircle2,
   LayoutGrid,
+  MessageSquare,
 } from "lucide-react";
 
 import {
@@ -227,7 +228,7 @@ const AdminStudentDetailPage: React.FC = () => {
               <h2 className="text-sm font-medium text-slate-500">
                 Ref:{" "}
                 <span className="text-slate-900 font-mono tracking-tight">
-                  {studentId?.slice(-8).toUpperCase()}
+                  {student.libraryId || studentId?.slice(-8).toUpperCase()}
                 </span>
               </h2>
             </div>
@@ -245,6 +246,14 @@ const AdminStudentDetailPage: React.FC = () => {
               }
             >
               <RefreshCcw className="h-4 w-4" />
+            </Button>
+
+            <Button
+              className="h-10 sm:h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 italic transition-all active:scale-95 flex items-center gap-2"
+              onClick={() => navigate(`/admin/chat?userId=${student._id}&userType=Student`)}
+            >
+              <MessageSquare size={16} />
+              Secure Chat
             </Button>
 
             {student.status === "ARCHIVED" ? (
@@ -351,7 +360,7 @@ const AdminStudentDetailPage: React.FC = () => {
                   <p className="text-slate-500 font-medium text-sm md:text-base">
                     Enrollment ID:{" "}
                     <span className="text-slate-900 font-semibold uppercase">
-                      {studentId?.slice(-10)}
+                      {student.libraryId || studentId?.slice(-10)}
                     </span>
                   </p>
                 </div>

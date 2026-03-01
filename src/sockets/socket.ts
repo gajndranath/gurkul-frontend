@@ -16,13 +16,40 @@ export const getSocket = (): Socket => {
 };
 
 export const connectSocket = (token: string) => {
+  if (!token) return;
+
   const s = getSocket();
-  s.auth = { token };
-  if (!s.connected) {
+  const auth = s.auth as { token?: string } | undefined;
+  const currentToken = auth?.token;
+
+  if (currentToken !== token) {
+    console.log("[Socket] Token updated or fresh init. Forcing fresh connection...");
+    s.auth = { token };
+    
+    // Cleanup old listeners if any to prevent duplicates
+    s.off("connect_error");
+    s.off("disconnect");
+
+    s.on("connect_error", (err) => {
+      console.error("[Socket] Connection error:", err.message);
+      if (err.message === "jwt expired" || err.message === "Authentication error") {
+        s.disconnect();
+      }
+    });
+
+    s.on("disconnect", (reason) => {
+      console.warn("[Socket] Disconnected:", reason);
+      if (reason === "io server disconnect") {
+        // Server closed the connection (likely auth failure)
+        // We don't auto-reconnect here to avoid loops
+      }
+    });
+
+    s.disconnect().connect();
+  } else if (!s.connected) {
+    console.log("[Socket] Restoring connection...");
     s.connect();
   }
-  // Debug log for handshake
-  // ...existing code...
 };
 
 export const disconnectSocket = () => {

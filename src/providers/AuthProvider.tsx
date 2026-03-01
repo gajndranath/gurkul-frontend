@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSessionStore } from "../stores/sessionStore";
 import { AuthService } from "../services/AuthService";
 import { useFcm } from "../hooks/useFcm";
+import { connectSocket } from "../sockets/socket";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -25,9 +26,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       try {
         if (token) {
-          // TODO: Verify profile with backend if needed to ensure token is still valid
-          // This prevents stale localStorage data from showing private routes
+          // 2. Check for local expiration before resuming
+          const expiresAt = useSessionStore.getState().expiresAt;
+          if (expiresAt && Date.now() > expiresAt) {
+            console.warn("[Auth] Session expired locally. Performing cleanup.");
+            AuthService.logout();
+            setIsInitializing(false);
+            return;
+          }
+
           console.log("[Auth] Session resumed for role:", role);
+          
+          // ✅ Initialize Socket Connection
+          connectSocket(token);
         }
       } catch (error) {
         console.error("[Auth] Initial verification failed:", error);
@@ -51,5 +62,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+    </>
+  );
 };

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import {
   Home,
   Users2,
@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   Info,
 } from "lucide-react";
+import { useSlots } from "../../slots/hooks/useSlots"; // To show child slot count
 import {
   Card,
   CardContent,
@@ -22,17 +23,27 @@ import type { Room } from "../types/room.types";
 
 interface RoomCardProps {
   room: Room;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onViewDetails?: () => void; // New prop for drawer
 }
 
-const RoomCardWidget: React.FC<RoomCardProps> = memo(({ room, onEdit, onDelete }) => {
+const RoomCardWidget: React.FC<RoomCardProps> = memo(({ room, onEdit, onDelete, onViewDetails }) => {
+  const { slots } = useSlots();
+  
+  const roomSlots = useMemo(() => 
+    (slots || []).filter(s => s.roomId === room._id),
+  [slots, room._id]);
+
   return (
     <div className="group h-full">
       <Card
-        className="h-full transition-all duration-500 relative overflow-hidden border-slate-200 shadow-sm rounded-[28px] bg-white hover:shadow-2xl hover:shadow-blue-200/40 hover:-translate-y-2 hover:border-blue-300"
+        onClick={onViewDetails}
+        className="h-full cursor-pointer transition-all duration-500 relative overflow-hidden border-slate-100 shadow-sm rounded-[32px] bg-white group hover:shadow-2xl hover:shadow-blue-200/40 hover:-translate-y-2 hover:ring-1 hover:ring-blue-100"
       >
-        <div className="absolute -right-8 -top-8 w-24 h-24 bg-blue-50 rounded-full blur-3xl group-hover:bg-blue-100 transition-colors duration-700" />
+        {/* Animated Background Shimmer */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/0 via-blue-600/0 to-blue-600/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        <div className="absolute -right-8 -top-8 w-24 h-24 bg-blue-50 rounded-full blur-3xl group-hover:bg-blue-100/50 transition-colors duration-700" />
         
         <CardContent className="p-6 flex flex-col h-full relative z-10">
           <div className="flex justify-between items-start mb-6 text-left">
@@ -96,15 +107,25 @@ const RoomCardWidget: React.FC<RoomCardProps> = memo(({ room, onEdit, onDelete }
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                 <Users2 size={11} className="text-blue-500" /> Capacity
               </p>
-              <div className="flex items-end gap-2">
-                <p className="text-2xl font-black text-slate-900 tracking-tight leading-none">
-                  {room.totalSeats}
-                </p>
-                <span className="text-slate-400 font-bold text-xs mb-0.5 uppercase tracking-widest">
-                  Seats available
-                </span>
-              </div>
+            <div className="flex items-end justify-between gap-2">
+               <div className="space-y-1">
+                 <p className="text-2xl font-black text-slate-900 tracking-tight leading-none">
+                   {room.totalSeats}
+                 </p>
+                 <span className="text-slate-400 font-bold text-[9px] uppercase tracking-widest block">
+                   Node Capacity
+                 </span>
+               </div>
+               <div className="text-right space-y-1">
+                 <p className="text-lg font-black text-blue-600 tracking-tight leading-none">
+                   {roomSlots.length}
+                 </p>
+                 <span className="text-slate-400 font-bold text-[9px] uppercase tracking-widest block">
+                    Active Shifts
+                 </span>
+               </div>
             </div>
+          </div>
 
             <div className="p-3 bg-slate-50/80 rounded-2xl border border-slate-100/50">
                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
@@ -129,7 +150,7 @@ const RoomCardWidget: React.FC<RoomCardProps> = memo(({ room, onEdit, onDelete }
               variant="default"
               size="sm"
               onClick={onEdit}
-              className="rounded-xl h-10 px-5 text-[10px] font-black uppercase tracking-widest bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 flex gap-2 active:scale-95"
+              className="rounded-xl h-10 px-5 text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-blue-600 shadow-lg shadow-slate-200 flex gap-2 active:scale-95 transition-all"
             >
               Configure <ArrowUpRight size={14} />
             </Button>

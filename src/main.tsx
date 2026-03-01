@@ -6,7 +6,6 @@ import "./index.css";
 
 import SessionSyncer from "./components/SessionSyncer";
 import { AuthProvider } from "./providers/AuthProvider";
-import { FcmDebugger } from "./components/FcmDebugger";
 import { requestForToken } from "./config/firebase";
 
 const queryClient = new QueryClient();
@@ -40,7 +39,6 @@ createRoot(document.getElementById("root")!).render(
       <SessionSyncer />
       <AuthProvider>
         <AppRoutes />
-        <FcmDebugger />
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,

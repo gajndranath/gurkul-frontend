@@ -75,8 +75,11 @@ export const useSessionStore = create(
       },
       logout: () => {
         get().clearSession();
-        localStorage.clear();
-        sessionStorage.clear();
+        // ⚠️ CRITICAL: DO NOT use localStorage.clear() as it wipes E2EE private keys
+        // Only remove auth/session specific keys
+        localStorage.removeItem("library-auth-cache");
+        sessionStorage.removeItem("library-auth-cache");
+        // We can also clear other non-essential caches if needed, but NOT the chat store
       },
       login: (
         token: string,

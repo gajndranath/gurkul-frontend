@@ -1,6 +1,6 @@
 // Centralized types for user, session, and auth flows
 
-export type UserRole = "ADMIN" | "STUDENT" | "SUPER_ADMIN";
+export type UserRole = "ADMIN" | "STUDENT" | "SUPER_ADMIN" | "STAFF";
 
 export interface AuthSession {
   token: string;
@@ -19,6 +19,7 @@ export interface Student {
   emailVerified: boolean;
   status: string;
   libraryId: string;
+  tenantId?: string;
 }
 
 export interface Admin {
@@ -27,6 +28,7 @@ export interface Admin {
   email: string;
   role: UserRole;
   lastLogin?: string;
+  tenantId?: string;
 }
 
 export interface AuthResponse {

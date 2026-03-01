@@ -72,3 +72,24 @@ const playFallbackBeep = () => {
     console.warn("[Audio] Fallback beep failed:", e);
   }
 };
+
+let ringingInterval: any = null;
+
+export const playRingingSound = () => {
+  if (ringingInterval) return;
+  
+  // Initial beep
+  playFallbackBeep();
+  
+  // Loop every 2 seconds
+  ringingInterval = setInterval(() => {
+    playFallbackBeep();
+  }, 2000);
+};
+
+export const stopRingingSound = () => {
+  if (ringingInterval) {
+    clearInterval(ringingInterval);
+    ringingInterval = null;
+  }
+};

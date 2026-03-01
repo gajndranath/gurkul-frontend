@@ -13,6 +13,10 @@ interface Slot {
   _id: string;
   name: string;
   availableSeats: number;
+  roomId?: {
+    _id: string;
+    name: string;
+  } | string;
 }
 
 interface SlotsData {
@@ -44,6 +48,8 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
     { label: "Rate Defined", met: (formValues?.monthlyFee || 0) > 0 },
   ];
 
+  const roomName = (typeof selectedSlot?.roomId === 'object' && selectedSlot.roomId?.name) || "Global";
+
   return (
     <div className="bg-white rounded-[24px] p-6 ring-1 ring-slate-200 shadow-sm space-y-6">
       {/* 1. Header Snapshot */}
@@ -67,10 +73,10 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 
         <div className="flex justify-between items-center text-[11px] font-bold">
           <span className="text-slate-400 uppercase tracking-tighter flex items-center gap-1.5">
-            <LayoutGrid size={12} className="text-blue-500" /> Slot
+            <LayoutGrid size={12} className="text-blue-500" /> Room / Slot
           </span>
           <span className="text-slate-700">
-            {selectedSlot?.name || "Unselected"}
+            {selectedSlot ? `${roomName} — ${selectedSlot.name}` : "Unselected"}
           </span>
         </div>
 

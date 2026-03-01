@@ -10,17 +10,17 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
+    config.headers = config.headers || {};
+    
+    // Inject Tenant ID for all requests (even unauthenticated ones like registration)
+    const tenantId = import.meta.env.VITE_TENANT_ID;
+    if (tenantId) {
+      config.headers["X-Tenant-ID"] = tenantId;
+    }
+
     const token = useSessionStore.getState().token;
     if (token) {
-      config.headers = config.headers || {};
       config.headers["Authorization"] = `Bearer ${token}`;
-      
-      // Inject Tenant ID for all requests (authenticated or not, if available)
-      const tenantId = import.meta.env.VITE_TENANT_ID;
-      if (tenantId) {
-        config.headers["X-Tenant-ID"] = tenantId;
-      }
-      // ...existing code...
     }
     return config;
   },

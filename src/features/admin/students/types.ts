@@ -18,7 +18,8 @@ export interface FeeHistoryItem {
 
 export interface Student {
   _id?: string;
-  id: string;
+  id?: string;
+  libraryId: string;
   name: string;
   email: string;
   phone?: string;

@@ -11,6 +11,7 @@ export type NotificationCategory =
   | "SYSTEM_ALERT"
   | "TEST"
   | "ANNOUNCEMENT"
+  | "FEE_OVERDUE_BULK"
   | "CHAT_MESSAGE";
 
 export interface NotificationMetadata {

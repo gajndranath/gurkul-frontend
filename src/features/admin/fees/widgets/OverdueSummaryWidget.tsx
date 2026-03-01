@@ -20,7 +20,7 @@ import { useOverdueSummary } from "../hooks/useFees";
 import { formatCurrency } from "@/lib/utils";
 // ...existing code...
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/ui";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import axiosInstance from "@/api/axiosInstance";
@@ -99,98 +99,100 @@ function StudentRow({
   };
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden mb-2 bg-white">
+    <div className="group border-b border-slate-50 last:border-none py-1 first:pt-0">
       {/* Main Row */}
       <div
-        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/5 transition-colors"
+        className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 cursor-pointer hover:bg-slate-50/50 rounded-xl sm:rounded-2xl transition-all"
         onClick={() => setExpanded((v) => !v)}
       >
-        {/* Urgency dot */}
-        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${urg.dot}`} />
+        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          {/* Urgency indicator */}
+          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${urg.dot} shadow-[0_0_8px] shadow-current`} />
 
-        {/* Name + Library ID */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-black text-slate-900 truncate">
-            {student.name}
-          </p>
-          {student.libraryId && (
-            <p className="text-[10px] text-slate-400">#{student.libraryId}</p>
-          )}
+          {/* Name + Library ID */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-black text-slate-900 truncate tracking-tight">
+                {student.name}
+              </p>
+              <Badge 
+                variant="outline" 
+                className="hidden xs:flex rounded-md text-[8px] font-black border-slate-200 text-slate-400 uppercase h-4 px-1"
+              >
+                Since {student.monthsDue[0]}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              {student.libraryId && (
+                <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  ID: {student.libraryId}
+                </p>
+              )}
+              <span className="xs:hidden text-[8px] font-bold text-rose-500 uppercase tracking-tighter bg-rose-50 px-1 rounded-sm">
+                Since {student.monthsDue[0]}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Days overdue badge */}
-        <span
-          className={`text-xs font-bold px-2 py-0.5 rounded-full border border-destructive text-destructive bg-destructive/10`}
-        >
-          {urg.emoji}{" "}
-          {student.daysOverdue === 0 ? "Today" : `${student.daysOverdue}d`}
-        </span>
+        <div className="flex items-center justify-between sm:justify-end gap-4 pl-4 sm:pl-0">
+          {/* Status indicator */}
+          <div className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border flex items-center gap-1.5 ${urg.color}`}>
+             <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">{urg.label}</span>
+          </div>
 
-        {/* Amount */}
-        <span className="text-sm font-bold text-primary">
-          {formatCurrency(student.totalDueAmount)}
-        </span>
+          {/* Amount */}
+          <div className="text-right flex flex-col items-end">
+            <p className="text-xs sm:text-sm font-black text-slate-900 tracking-tight">
+              {formatCurrency(student.totalDueAmount)}
+            </p>
+            <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+              {student.daysOverdue === 0 ? "Due Today" : `${student.daysOverdue}d Overdue`}
+            </p>
+          </div>
 
-        {/* Expand icon */}
-        <span className="text-slate-500">
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </span>
+          {/* Action Toggle */}
+          <span className="text-slate-300 group-hover:text-slate-900 transition-colors shrink-0">
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </span>
+        </div>
       </div>
 
       {/* Expanded detail panel */}
       {expanded && (
-        <div className="px-4 pb-4 pt-1 border-t border-border space-y-3 bg-card">
+        <div className="px-12 pb-6 pt-2 space-y-4 animate-in slide-in-from-top-2 duration-300">
           {/* Months Due */}
-          <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-              Months Due
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {student.monthsDue.map((m) => (
-                <span
-                  key={m}
-                  className="text-xs bg-destructive/10 text-destructive border border-destructive/20 rounded px-2 py-0.5"
-                >
-                  {m}
-                </span>
-              ))}
-            </div>
+          <div className="flex items-center gap-4">
+             <div className="h-0.5 w-4 bg-slate-100" />
+              <div className="flex flex-wrap gap-2">
+                {student.monthsDue.map((m) => (
+                  <span
+                    key={m}
+                    className="text-[9px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-100 rounded-md px-2 py-1"
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
           </div>
 
-          {/* Contact + Reminder stats */}
-          <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+          <div className="grid grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
             {student.phone && (
-              <div className="flex items-center gap-1">
-                <Phone size={11} /> {student.phone}
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Phone size={10} className="text-blue-500" /></div> {student.phone}
               </div>
             )}
             {student.email && (
-              <div className="flex items-center gap-1 truncate">
-                <Mail size={11} /> {student.email}
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate">
+                <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Mail size={10} className="text-blue-500" /></div> {student.email}
               </div>
             )}
-            <div className="flex items-center gap-1">
-              <BellRing size={11} /> Reminders sent:{" "}
-              <strong className="text-blue-600">{student.reminderCount}</strong>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><BellRing size={10} className="text-amber-500" /></div> Reminders: <span className="text-slate-900">{student.reminderCount}</span>
             </div>
             {student.lastReminderSentAt && (
-              <div className="flex items-center gap-1">
-                <Clock size={11} /> Last:{" "}
-                <strong className="text-blue-600">
-                  {new Date(student.lastReminderSentAt).toLocaleDateString(
-                    "en-IN",
-                  )}
-                </strong>
-              </div>
-            )}
-            {student.nextReminderDue && (
-              <div className="flex items-center gap-1">
-                <Bell size={11} /> Next:{" "}
-                <strong className="text-blue-600">
-                  {new Date(student.nextReminderDue).toLocaleDateString(
-                    "en-IN",
-                  )}
-                </strong>
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100"><Clock size={10} className="text-slate-400" /></div> Last: <span className="text-slate-900">{new Date(student.lastReminderSentAt).toLocaleDateString("en-IN")}</span>
               </div>
             )}
           </div>
@@ -198,8 +200,7 @@ function StudentRow({
           {/* Send Reminder button */}
           <Button
             size="sm"
-            variant="outline"
-            className="w-full border-primary text-primary hover:bg-primary/10 text-xs font-black"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-slate-200"
             disabled={sending}
             onClick={(e) => {
               e.stopPropagation();
@@ -207,11 +208,11 @@ function StudentRow({
             }}
           >
             {sending ? (
-              <RefreshCw size={12} className="mr-2 animate-spin" />
+              <RefreshCw size={14} className="mr-2 animate-spin" />
             ) : (
-              <Bell size={12} className="mr-2" />
+              <Bell size={14} className="mr-2 text-amber-400" />
             )}
-            {sending ? "Sending…" : "Send Reminder Now"}
+            {sending ? "Processing..." : "Dispatch Reminder Now"}
           </Button>
         </div>
       )}
@@ -329,13 +330,16 @@ const OverdueSummaryWidget: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-white border-slate-200">
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
+      <Card className="bg-white border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
+        <CardHeader className="p-8">
+          <Skeleton className="h-6 w-48 mb-4" />
+          <div className="flex gap-2">
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-20 rounded-xl" />)}
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="px-8 pb-8 space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+            <Skeleton key={i} className="h-16 w-full rounded-[24px]" />
           ))}
         </CardContent>
       </Card>
@@ -343,97 +347,102 @@ const OverdueSummaryWidget: React.FC = () => {
   }
 
   return (
-    <Card className="bg-secondary border-border">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-black text-secondary flex items-center gap-2">
-            <AlertTriangle size={16} className="text-orange-400" />
-            Overdue Fees
+    <Card className="bg-white border-slate-100 shadow-sm rounded-[32px] overflow-hidden">
+      <CardHeader className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <CardTitle className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-3 uppercase italic tracking-tighter">
+            <AlertTriangle size={20} className="text-rose-500 shrink-0" />
+            <span className="truncate">Arrears Tracker</span>
             {(totals?.totalStudentsOverdue ?? 0) > 0 && (
-              <span className="text-xs bg-destructive/10 text-destructive border border-destructive/20 rounded-full px-2 py-0.5">
-                {totals!.totalStudentsOverdue} student
-                {totals!.totalStudentsOverdue > 1 ? "s" : ""}
+              <span className="hidden xs:inline-flex text-[9px] sm:text-[10px] bg-rose-50 text-rose-600 border border-rose-100 rounded-full px-3 py-1 font-black ml-2 tracking-widest shadow-sm whitespace-nowrap">
+                {totals!.totalStudentsOverdue} AT RISK
               </span>
             )}
+          </CardTitle>
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full lg:w-auto">
             {/* Bulk actions */}
             {filtered.length > 0 && (
-              <div className="flex gap-2 ml-4">
+              <div className="flex gap-2 flex-1 sm:flex-initial">
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="outline"
-                  className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 text-xs"
+                  className="flex-1 sm:flex-initial rounded-xl border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest h-9 sm:h-10 shadow-sm transition-all"
                   disabled={bulkSending || selected.length === 0}
                   onClick={sendBulkReminders}
                 >
                   {bulkSending ? (
-                    <RefreshCw size={12} className="mr-2 animate-spin" />
+                    <RefreshCw size={12} className="mr-1.5 sm:mr-2 animate-spin" />
                   ) : (
-                    <BellRing size={12} className="mr-2" />
+                    <BellRing size={12} className="mr-1.5 sm:mr-2" />
                   )}
                   {bulkSending
                     ? "Sending…"
-                    : `Send Bulk Reminder (${selected.length})`}
+                    : `Remind (${selected.length})`}
                 </Button>
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="outline"
-                  className="border-green-500/30 text-green-400 hover:bg-green-500/10 text-xs"
+                  className="flex-1 sm:flex-initial rounded-xl border-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest h-9 sm:h-10 shadow-sm transition-all whitespace-nowrap"
                   disabled={exporting}
                   onClick={exportCSV}
                 >
                   {exporting ? (
-                    <RefreshCw size={12} className="mr-2 animate-spin" />
+                    <RefreshCw size={12} className="mr-1.5 sm:mr-2 animate-spin" />
                   ) : (
-                    <Bell size={12} className="mr-2" />
+                    <IndianRupee size={12} className="mr-1.5 sm:mr-2" /> // Changed icon for context
                   )}
-                  {exporting ? "Exporting…" : "Export CSV"}
+                  {exporting ? "Expt…" : "Export"}
                 </Button>
               </div>
             )}
-          </CardTitle>
-          <button
-            onClick={() => refetch()}
-            className="text-slate-500 hover:text-white transition-colors p-1 rounded"
-          >
-            <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} />
-          </button>
+            <button
+              onClick={() => refetch()}
+              className="text-slate-300 hover:text-blue-600 transition-colors p-2 bg-slate-50 rounded-xl border border-slate-100 h-9 sm:h-10 w-9 sm:w-10 flex items-center justify-center shrink-0"
+            >
+              <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} />
+            </button>
+          </div>
         </div>
 
         {/* Summary chips */}
         {totals && totals.totalStudentsOverdue > 0 && (
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center gap-1.5 text-xs text-muted">
-              <IndianRupee size={12} />
-              Total Outstanding:{" "}
-              <strong className="text-primary ml-1">
-                {formatCurrency(totals.totalOutstandingAmount)}
-              </strong>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50">
+              <div className="h-8 w-8 rounded-lg bg-rose-600 flex items-center justify-center text-white shadow-lg shadow-rose-200">
+                 <IndianRupee size={16} />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest leading-none mb-1">Total Liquidity Risk</p>
+                 <p className="text-xl font-black text-rose-600 tracking-tight italic">
+                   {formatCurrency(totals.totalOutstandingAmount)}
+                 </p>
+              </div>
             </div>
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="flex gap-2.5 flex-wrap">
               <StatChip
-                label="⛔ 30d+"
+                label="Critical"
                 value={totals.critical}
-                color="border-destructive text-destructive bg-destructive/10"
+                color="border-rose-100 text-rose-600 bg-rose-50 shadow-sm"
               />
               <StatChip
-                label="🔴 15d+"
+                label="High Risk"
                 value={totals.red}
-                color="border-destructive text-destructive bg-destructive/10"
+                color="border-rose-100 text-rose-500 bg-rose-50/50"
               />
               <StatChip
-                label="🟠 7d+"
+                label="Arrears"
                 value={totals.orange}
-                color="border-accent text-accent bg-accent/10"
+                color="border-amber-100 text-amber-600 bg-amber-50 shadow-sm"
               />
               <StatChip
-                label="🟡 3d+"
+                label="Pending"
                 value={totals.yellow}
-                color="border-yellow-400 text-yellow-600 bg-yellow-100"
+                color="border-amber-100 text-amber-500 bg-amber-50/50"
               />
               <StatChip
-                label="🟢 new"
+                label="Recent"
                 value={totals.mild}
-                color="border-emerald-400 text-emerald-600 bg-emerald-100"
+                color="border-emerald-100 text-emerald-600 bg-emerald-50"
               />
             </div>
           </div>
@@ -441,19 +450,19 @@ const OverdueSummaryWidget: React.FC = () => {
 
         {/* Filter tabs */}
         {students.length > 0 && (
-          <div className="flex gap-1 mt-3 flex-wrap">
+          <div className="flex gap-2 flex-wrap border-t border-slate-50 pt-6">
             {(["all", "critical", "red", "orange", "yellow"] as const).map(
               (f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`text-[10px] px-2.5 py-1 rounded-full border transition-all capitalize ${
+                  className={`text-[9px] px-4 py-2 rounded-xl font-black uppercase tracking-widest transition-all ${
                     filter === f
-                      ? "bg-blue-600 border-blue-500 text-white"
-                      : "border-white/10 text-slate-400 hover:text-white"
+                      ? "bg-slate-900 text-white shadow-xl shadow-slate-200"
+                      : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
-                  {f === "all" ? `All (${students.length})` : f}
+                  {f === "all" ? `Consolidated (${students.length})` : f}
                 </button>
               ),
             )}

@@ -15,8 +15,9 @@ export interface AdminProfile {
   _id: string;
   name: string;
   email: string;
-  avatar?: string;
   role: string;
+  avatar?: string;
+  tenantId?: string;
   // add more fields as needed
 }
 

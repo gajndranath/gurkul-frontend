@@ -6,7 +6,9 @@ export function useNotifications(page = 1, limit = 20, unreadOnly = false) {
   return useQuery({
     queryKey: ["notifications", { page, limit, unreadOnly }],
     queryFn: () => notificationService.getHistory(page, limit, unreadOnly),
-    placeholderData: (previousData) => previousData, // Pagination ke waqt flickering rokne ke liye
+    staleTime: 60000, // 1 minute stability
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData, 
   });
 }
 

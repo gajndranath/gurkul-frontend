@@ -68,6 +68,10 @@ const LibrarySettingsPage = lazy(
   () => import("../features/admin/settings/LibrarySettingsPage"),
 );
 
+const InteractiveMapPage = lazy(
+  () => import("../features/admin/map/InteractiveMapPage"),
+);
+
 const ExpensesPage = lazy(
   () => import("../features/admin/expenses/ExpensesPage"),
 );
@@ -122,10 +126,44 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const SocialHubPage = lazy(
+  () => import("../features/social/SocialHubPage"),
+);
+
+const AdminSocialHubPage = lazy(
+  () => import("../features/social/AdminSocialHubPage"),
+);
+
+const ChatPage = lazy(
+  () => import("../features/chat/ChatPage"),
+);
+
+const AdminAnnouncementManager = lazy(
+  () => import("../features/announcement/AdminAnnouncementManager").then(m => ({ default: m.AdminAnnouncementManager })),
+);
+
+const AnnouncementList = lazy(
+  () => import("../features/announcement/AnnouncementList").then(m => ({ default: m.AnnouncementList })),
+);
+
+const LandingPage = lazy(
+  () => import("../features/landing/LandingPage"),
+);
+
+const NotFoundPage = lazy(
+  () => import("../features/error/NotFoundPage"),
+);
+
 const routes: RouteObject[] = [
   {
     path: "/",
-    element: <Navigate to="/student/dashboard" replace />,
+    element: (
+      <PublicRoute>
+        <Suspense fallback={<Loader />}>
+          <LandingPage />
+        </Suspense>
+      </PublicRoute>
+    ),
   },
   {
     path: "/student",
@@ -136,6 +174,32 @@ const routes: RouteObject[] = [
           <ProtectedRoute allowedRole="STUDENT">
             <RootLayout>
               <StudentDashboardPage />
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "friends",
+        element: (
+          <ProtectedRoute allowedRole="STUDENT">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <SocialHubPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+
+      {
+        path: "chat/:conversationId?",
+        element: (
+          <ProtectedRoute allowedRole="STUDENT">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <ChatPage />
+              </Suspense>
             </RootLayout>
           </ProtectedRoute>
         ),
@@ -224,6 +288,18 @@ const routes: RouteObject[] = [
         ),
       },
       {
+        path: "announcements",
+        element: (
+          <ProtectedRoute allowedRole="STUDENT">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <AnnouncementList />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "notifications",
         element: (
           <ProtectedRoute allowedRole="STUDENT">
@@ -262,6 +338,18 @@ const routes: RouteObject[] = [
   {
     path: "/admin",
     children: [
+      {
+        path: "interactive-map",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <InteractiveMapPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "dashboard",
         element: (
@@ -388,6 +476,42 @@ const routes: RouteObject[] = [
         ),
       },
       {
+        path: "social",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <AdminSocialHubPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "chat/:conversationId?",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <ChatPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "announcements",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <AdminAnnouncementManager />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "settings",
         element: (
           <ProtectedRoute allowedRole="ADMIN">
@@ -477,7 +601,11 @@ const routes: RouteObject[] = [
   // ✅ CATCH-ALL ROUTE MUST BE AT THE BOTTOM!
   {
     path: "*",
-    element: <Navigate to="/student/login" replace />,
+    element: (
+      <Suspense fallback={<Loader />}>
+        <NotFoundPage />
+      </Suspense>
+    ),
   },
 ];
 

@@ -96,7 +96,7 @@ const SlotFormModal: React.FC<SlotFormModalProps> = ({
         <DialogHeader className="p-6 border-b border-slate-50 bg-white relative">
           <button
             onClick={onClose}
-            className="absolute right-6 top-7 p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all z-50"
+            className="absolute right-6 top-7 p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all z-[60]"
           >
             <X size={18} />
           </button>

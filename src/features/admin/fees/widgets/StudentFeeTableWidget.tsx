@@ -15,6 +15,8 @@ import type {
   FeeHistoryItem,
 } from "../types/fee.types";
 
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 type FeeDetailItem = DashboardPaymentStatus["details"][number];
 
 const StudentFeeTableWidget: React.FC = memo(() => {
@@ -89,6 +91,9 @@ const StudentFeeTableWidget: React.FC = memo(() => {
                     Member
                   </th>
                   <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Period
+                  </th>
+                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     Slot Info
                   </th>
                   <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -111,12 +116,22 @@ const StudentFeeTableWidget: React.FC = memo(() => {
                       className="group hover:bg-slate-50/30 transition-colors"
                     >
                       <td className="px-6 py-5">
-                        <p className="font-bold text-slate-900">
+                        <p className="font-bold text-slate-900 leading-tight">
                           {item.studentName}
                         </p>
                         <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter italic">
                           ID: {(item.studentId || "unknown").slice(-6)}
                         </p>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                           <div className="h-6 w-6 rounded-md bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50">
+                              <Receipt size={12} />
+                           </div>
+                           <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">
+                             {monthNames[item.month]} {item.year}
+                           </span>
+                        </div>
                       </td>
                       <td className="px-6 py-5">
                         <Badge
@@ -164,9 +179,14 @@ const StudentFeeTableWidget: React.FC = memo(() => {
                         <User size={18} />
                       </div>
                       <div>
-                        <p className="font-black text-slate-900 leading-tight">
-                          {item.studentName}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-black text-slate-900 leading-tight">
+                            {item.studentName}
+                          </p>
+                          <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 rounded-sm border border-blue-100 uppercase tracking-tighter">
+                            {monthNames[item.month]} {item.year}
+                          </span>
+                        </div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
                           ID: {(item.studentId || "unknown").slice(-8)}
                         </p>

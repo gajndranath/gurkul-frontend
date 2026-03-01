@@ -162,11 +162,21 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
                   }
                 }}
                 value={field.value}
-                defaultValue={field.value}
+                key={field.value} // Fix pre-selection logic
               >
                 <FormControl>
                   <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white font-bold focus:ring-2 focus:ring-blue-600/20 transition-all shadow-sm hover:bg-slate-50/50">
-                    <SelectValue placeholder="Select a slot" />
+                    <SelectValue placeholder="Select a slot">
+                      {selectedSlot ? (
+                        <div className="flex items-center gap-2">
+                           <span className="text-blue-600 font-black">
+                             {(typeof selectedSlot.roomId === 'object' && selectedSlot.roomId?.name) || "Global"}
+                           </span>
+                           <span className="text-slate-300">/</span>
+                           <span>{selectedSlot.name}</span>
+                        </div>
+                      ) : null}
+                    </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent
@@ -284,7 +294,7 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
           <div className="p-1 bg-white rounded-[32px] ring-1 ring-slate-200 shadow-sm overflow-hidden">
             <SeatMap 
               slotId={selectedSlotId} 
-              onSeatSelect={(seat: string) => setValue("seatNumber", seat, { shouldValidate: true, shouldDirty: true })}
+              onSeatSelect={(seat) => setValue("seatNumber", seat.seatNumber, { shouldValidate: true, shouldDirty: true })}
               selectedSeat={form.getValues("seatNumber")}
             />
 
@@ -303,6 +313,14 @@ const LibraryInfoSection: React.FC<LibraryInfoSectionProps> = ({
             </h4>
           </div>
           <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+            <div className="space-y-1">
+              <p className="text-[8px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                <LayoutGrid size={10} /> Room
+              </p>
+              <p className="text-xs font-black text-white">
+                {(typeof selectedSlot.roomId === 'object' && selectedSlot.roomId?.name) || "Global"}
+              </p>
+            </div>
             <div className="space-y-1">
               <p className="text-[8px] font-bold text-slate-500 uppercase flex items-center gap-1">
                 <Clock size={10} /> Timing

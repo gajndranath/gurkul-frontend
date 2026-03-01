@@ -69,6 +69,7 @@ export interface GetStudentsParams {
   status?: string;
   page?: number;
   limit?: number;
+  includeArchived?: boolean;
 }
 
 export const getStudents = async (
@@ -88,6 +89,6 @@ export const getStudent = async (id: string): Promise<any> => {
 
 // ✅ Get student fee summary
 export const getStudentFeeSummary = async (studentId: string) => {
-  const { data } = await axiosInstance.get(`/students/${studentId}/fees`);
+  const { data } = await axiosInstance.get(`/fees/summary/${studentId}`);
   return data;
 };
