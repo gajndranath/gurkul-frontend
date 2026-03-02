@@ -46,6 +46,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const isIceRestarting = useRef(false);
 
   // WebRTC Refs
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -185,10 +186,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           break;
         case "failed":
           setIsReconnecting(true);
-          handleIceRestart(otherId, otherType);
+          // Only trigger if a restart isn't already active/pending
+          if (!isIceRestarting.current) {
+            handleIceRestart(otherId, otherType);
+          }
           break;
         case "connected":
           setIsReconnecting(false);
+          isIceRestarting.current = false; // Reset on success
           break;
         case "closed":
           handleCallEnded();
@@ -210,21 +215,38 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleIceRestart = async (otherId: string, otherType: string) => {
-    if (!pcRef.current || pcRef.current.connectionState === "connected") return;
+    if (!pcRef.current || pcRef.current.connectionState === "connected" || isIceRestarting.current) return;
     
+    // Guard: Only initiate restart if we are in 'stable' state.
+    // If not stable, we might be in the middle of receiving the OTHER peer's restart.
+    if (pcRef.current.signalingState !== "stable") {
+      console.log("[CallContext] Skipping ICE Restart initiation: signaling state is not stable (" + pcRef.current.signalingState + ")");
+      return;
+    }
+
     console.log("[CallContext] Initiating ICE Restart...");
+    isIceRestarting.current = true;
     try {
       const offer = await pcRef.current.createOffer({ iceRestart: true });
       offer.sdp = setOpusBitrate(offer.sdp!, 12000);
+      
+      // Re-check state before setting local description (another race condition guard)
+      if (pcRef.current.signalingState !== "stable") {
+        console.warn("[CallContext] Signaling state changed during offer creation. Aborting local restart.");
+        return;
+      }
+
       await pcRef.current.setLocalDescription(offer);
       
       socket.emit("call:ice_restart", {
         recipientId: otherId,
         recipientType: otherType,
+        fromId: userId,
+        fromType: role === "STUDENT" ? "Student" : "Admin",
         offer,
       });
 
-      // If still not connected after 15s of trying to restart, give up
+      // If still not connected after 15s, give up
       setTimeout(() => {
         if (pcRef.current && (pcRef.current.connectionState === "failed" || pcRef.current.connectionState === "disconnected")) {
           console.log("[CallContext] Reconnection timeout reached.");
@@ -233,7 +255,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, 15000);
     } catch (err) {
       console.error("[CallContext] ICE Restart failed:", err);
-      endCall();
+      isIceRestarting.current = false;
+      // Don't end call immediately if it's just a state error, let the other side's offer win
+      if (!(err instanceof DOMException && err.name === "InvalidStateError")) {
+          endCall();
+      }
     }
   };
 
@@ -350,10 +376,25 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socket.on("call:mute-status", handleMuteStatus);
     
     socket.on("call:ice_restart", async (data: any) => {
-      console.log("[CallContext] Received ICE Restart request");
-      if (pcRef.current) {
-        try {
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.offer));
+      console.log("[CallContext] Received ICE Restart request. Current state:", pcRef.current?.signalingState);
+      if (!pcRef.current || !userId || !data.fromId) return;
+
+      try {
+        const isPolite = userId < data.fromId; // The peer with smaller ID is "polite" and rolls back
+        const isGlare = pcRef.current.signalingState !== "stable";
+
+        if (isGlare) {
+          if (!isPolite) {
+            console.warn("[CallContext] Glare detected. I am impolite, ignoring remote restart.");
+            return;
+          }
+          console.warn("[CallContext] Glare detected. I am polite, rolling back local offer.");
+          await pcRef.current.setLocalDescription({ type: "rollback" });
+        }
+
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.offer));
+        
+        if (pcRef.current.signalingState === "have-remote-offer") {
           const answer = await pcRef.current.createAnswer();
           answer.sdp = setOpusBitrate(answer.sdp!, 12000);
           await pcRef.current.setLocalDescription(answer);
@@ -363,17 +404,21 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             recipientType: data.fromType,
             answer,
           });
-        } catch (err) {
-          console.error("[CallContext] Failed to handle ICE restart request:", err);
         }
+      } catch (err) {
+        console.error("[CallContext] Failed to handle ICE restart request:", err);
       }
     });
 
     socket.on("call:ice_restart_answer", async (data: any) => {
-      console.log("[CallContext] Received ICE Restart answer");
+      console.log("[CallContext] Received ICE Restart answer. Current state:", pcRef.current?.signalingState);
       if (pcRef.current && data.answer) {
         try {
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+          if (pcRef.current.signalingState === "have-local-offer") {
+            await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+          } else {
+            console.warn("[CallContext] Ignoring ICE restart answer (signaling state is " + pcRef.current.signalingState + ")");
+          }
         } catch (err) {
           console.error("[CallContext] Failed to apply ICE restart answer:", err);
         }
