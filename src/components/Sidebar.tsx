@@ -20,6 +20,7 @@ import {
   Home,
   Map as MapIcon,
   MessageSquare,
+  Shield,
 } from "lucide-react";
 
 
@@ -49,6 +50,7 @@ const adminMenu = [
       { label: "Announcements", path: "/admin/announcements", icon: <Bell size={18} /> },
       { label: "Social Hub", path: "/admin/social", icon: <Users size={18} /> },
       { label: "Terminal Comms", path: "/admin/chat", icon: <MessageSquare size={18} /> },
+      { label: "Moderation Hub", path: "/admin/moderation", icon: <Shield size={18} /> },
     ]
   },
   {

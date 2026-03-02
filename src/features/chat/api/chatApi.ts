@@ -40,6 +40,7 @@ export interface Conversation {
   lastMessageAt: string;
   lastMessagePreview: string;
   unreadCount?: number;
+  online?: boolean;
   blockedBy?: string[];
   mutedBy?: string[];
 }
@@ -98,6 +99,27 @@ export const chatApi = {
     return data;
   },
 
+  toggleMute: async (conversationId: string) => {
+    const { data } = await axiosInstance.post(
+      `${getApiBase()}/conversations/${conversationId}/mute`,
+    );
+    return data;
+  },
+
+  toggleBlock: async (conversationId: string) => {
+    const { data } = await axiosInstance.post(
+      `${getApiBase()}/conversations/${conversationId}/block`,
+    );
+    return data;
+  },
+
+  removeFriend: async (friendId: string) => {
+    const { data } = await axiosInstance.post(`/student-auth/friends/remove`, {
+      friendId,
+    });
+    return data;
+  },
+
   publishPublicKey: async (publicKey: string) => {
     const { data } = await axiosInstance.post(`${getApiBase()}/keys`, {
       publicKey,
@@ -122,5 +144,10 @@ export const chatApi = {
       }
       throw error;
     }
+  },
+  
+  submitReport: async (payload: { reportedId: string; reason: string; description?: string; evidence?: string[] }) => {
+    const { data } = await axiosInstance.post(`/moderation/report`, payload);
+    return data;
   },
 };

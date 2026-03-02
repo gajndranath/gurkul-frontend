@@ -9,20 +9,29 @@ import {
   MessageSquare,
   Loader2,
   Phone,
+  PhoneOff,
   Edit2,
-  Volume2,
-  VolumeX,
-  XCircle,
   Trash2,
   Check,
-  PhoneOff,
-  Mic,
-  MicOff,
+  XCircle,
   ShieldOff,
   BellOff,
+  Menu,
+  Shield,
+  Volume2,
+  VolumeX,
+  UserX,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
   useQuery,
   useQueryClient,
@@ -33,6 +42,8 @@ import { chatApi, type ChatMessage } from "./api/chatApi";
 import { useSessionStore } from "@/stores/sessionStore";
 import { getSocket } from "@/sockets/socket";
 import { useToast } from "@/hooks/useToast";
+import { useUIStore } from "@/stores/uiStore";
+import { useCallContext } from "@/contexts/CallContext";
 import { format, isToday, isYesterday } from "date-fns";
 import { useInView } from "react-intersection-observer";
 import ImageEditor from "./components/ImageEditor";
@@ -51,13 +62,12 @@ const ChatPage: React.FC = () => {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { error } = useToast();
-  const { userId, role, student, admin } = useSessionStore();
-  const myName =
-    student?.name || admin?.name || (role === "STUDENT" ? "Student" : "Admin");
+  const { error, success } = useToast();
+  const { userId, role } = useSessionStore();
   const isAdmin = ["ADMIN", "SUPER_ADMIN", "STAFF"].includes(role || "");
   const chatPathBase = isAdmin ? "/admin/chat" : "/student/chat";
   const socket = getSocket();
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
 
   const [messageInput, setMessageInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -70,12 +80,6 @@ const ChatPage: React.FC = () => {
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(
     null,
   );
-  const [incomingCall, setIncomingCall] = useState<any>(null);
-  const [outgoingCall, setOutgoingCall] = useState<any>(null);
-  const [activeCall, setActiveCall] = useState<any>(null);
-  const [callDuration, setCallDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isMutedNotifications, setIsMutedNotifications] = useState(false);
@@ -92,39 +96,90 @@ const ChatPage: React.FC = () => {
   >(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastMarkedReadId = useRef<string | null>(null);
+  const { startCall } = useCallContext();
 
-  // WebRTC Refs
-  const pcRef = useRef<RTCPeerConnection | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
-  const remoteStreamRef = useRef<MediaStream | null>(null);
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Reporting State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const iceConfig = {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun1.l.google.com:19302" },
-    ],
+  const handleStartCall = async (isVideo: boolean) => {
+    const other = activeConversation?.participants?.find(
+      (p) => String(p.participantId) !== String(userId),
+    );
+    if (!other || !conversationId) return;
+    await startCall(other.participantId, other.participantType, isVideo, conversationId);
   };
 
-  const setOpusBitrate = (sdp: string, bitrate: number) => {
-    let lines = sdp.split("\r\n");
-    let opusPayload: string | null = null;
-    for (let line of lines) {
-      if (line.includes("a=rtpmap:") && line.includes("opus/48000")) {
-        opusPayload = line.split(":")[1].split(" ")[0];
-        break;
-      }
+  const handleToggleMute = async () => {
+    if (!conversationId) return;
+    try {
+      await chatApi.toggleMute(conversationId);
+      setIsMutedNotifications(!isMutedNotifications);
+      queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+    } catch (err) {
+      error("Failed to toggle mute");
     }
-    if (opusPayload) {
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes(`a=fmtp:${opusPayload}`)) {
-          lines[i] = lines[i] + `;maxaveragebitrate=${bitrate}`;
-          break;
-        }
-      }
-    }
-    return lines.join("\r\n");
   };
+
+  const handleToggleBlock = async () => {
+    if (!conversationId) return;
+    try {
+      await chatApi.toggleBlock(conversationId);
+      setIsBlocked(!isBlocked);
+      queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+    } catch (err) {
+      error("Failed to toggle block");
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    const other = activeConversation?.participants?.find(
+      (p) => String(p.participantId) !== String(userId),
+    );
+    if (!other || other.participantType !== "Student") {
+        error("Cannot remove this contact");
+        return;
+    }
+    
+    if (window.confirm(`Are you sure you want to remove ${other.name} from your friends?`)) {
+      try {
+        await chatApi.removeFriend(other.participantId);
+        queryClient.invalidateQueries({ queryKey: ["chat", "friends"] });
+        queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+        navigate(chatPathBase);
+      } catch (err) {
+        error("Failed to remove friend");
+      }
+    }
+  };
+
+  const handleReportUser = async () => {
+    const other = activeConversation?.participants?.find(
+      (p) => String(p.participantId) !== String(userId),
+    );
+    if (!other || !reportReason) return;
+
+    setIsSubmittingReport(true);
+    try {
+      await chatApi.submitReport({
+        reportedId: other.participantId,
+        reason: reportReason,
+        description: reportDescription,
+      });
+      success("User reported successfully. Our team will review it.");
+      setIsReportModalOpen(false);
+      setReportReason("");
+      setReportDescription("");
+    } catch (err: any) {
+      error(err.response?.data?.message || "Failed to submit report");
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+
 
   // Key management removed for Instagram-style migration
 
@@ -367,8 +422,10 @@ const ChatPage: React.FC = () => {
   );
 
   const handleBulkStatusUpdate = React.useCallback(
-    (data: { conversationId: string; status: string }) => {
-      if (String(data.conversationId) === String(conversationId)) {
+    (data: { conversationId?: string; status: string; messageIds?: string[] }) => {
+      const isCurrentConversation = data.conversationId === conversationId || (!data.conversationId && data.messageIds);
+      
+      if (isCurrentConversation) {
         queryClient.setQueryData(
           ["chat", "messages", conversationId],
           (old: any) => {
@@ -376,9 +433,13 @@ const ChatPage: React.FC = () => {
             return {
               ...old,
               pages: old.pages.map((page: any[]) =>
-                page.map((m) =>
-                  String(m.senderId) === String(userId) ? { ...m, status: data.status } : m,
-                ),
+                page.map((m) => {
+                  const shouldUpdate = data.messageIds 
+                    ? data.messageIds.some(id => String(id) === String(m._id))
+                    : (String(m.senderId) === String(userId));
+                    
+                  return shouldUpdate ? { ...m, status: data.status } : m;
+                }),
               ),
             };
           },
@@ -490,53 +551,7 @@ const ChatPage: React.FC = () => {
     [conversationId, queryClient],
   );
 
-  const handleIncomingCall = React.useCallback(async (data: any) => {
-    setIncomingCall(data);
-    setTimeout(() => {
-      setIncomingCall((prev: any) =>
-        prev?.callerId === data.callerId ? null : prev,
-      );
-    }, 30000);
-  }, []);
 
-  const handleCallAccepted = React.useCallback(async (data: any) => {
-    setOutgoingCall(null);
-    setActiveCall({
-      otherId: data.acceptorId,
-      otherType: data.acceptorType,
-      name: data.acceptorName,
-    });
-    if (pcRef.current && data.answer) {
-      await pcRef.current.setRemoteDescription(
-        new RTCSessionDescription(data.answer),
-      );
-    }
-  }, []);
-
-  const handleIceCandidate = React.useCallback(async (data: any) => {
-    if (pcRef.current && data.candidate) {
-      try {
-        await pcRef.current.addIceCandidate(
-          new RTCIceCandidate(data.candidate),
-        );
-      } catch (e) {
-        console.error("ICE Candidate Error", e);
-      }
-    }
-  }, []);
-
-  const handleCallRejected = React.useCallback(() => {
-    setOutgoingCall(null);
-    cleanupWebRTC();
-    error("Call rejected");
-  }, [error]);
-
-  const handleCallEnded = React.useCallback(() => {
-    setActiveCall(null);
-    setIncomingCall(null);
-    setOutgoingCall(null);
-    cleanupWebRTC();
-  }, []);
 
   // Consolidated Socket Handlers
   useEffect(() => {
@@ -549,12 +564,37 @@ const ChatPage: React.FC = () => {
     socket.on("chat:message_edited", handleMessageEdited);
     socket.on("chat:message_deleted", handleMessageDeleted);
     socket.on("chat:reaction_updated", handleReactionUpdated);
+    
+    socket.on("presence:update", (data: any) => {
+      console.log("[ChatPage] Presence update:", data);
+      queryClient.setQueryData(["chat", "conversations"], (old: any) => {
+        if (!old) return old;
+        return old.map((c: any) => {
+          const other = c.participants?.find((p: any) => String(p.participantId) === String(data.userId));
+          if (other) {
+            return { ...c, online: data.online };
+          }
+          return c;
+        });
+      });
+    });
 
-    socket.on("call:incoming", handleIncomingCall);
-    socket.on("call:accepted", handleCallAccepted);
-    socket.on("call:rejected", handleCallRejected);
-    socket.on("call:ended", handleCallEnded);
-    socket.on("call:ice_candidate", handleIceCandidate);
+    socket.on("presence:statuses", (data: any) => {
+      console.log("[ChatPage] Bulk statuses received:", data.statuses);
+      queryClient.setQueryData(["chat", "conversations"], (old: any) => {
+        if (!old) return old;
+        return old.map((c: any) => {
+          const other = c.participants?.find((p: any) => String(p.participantId) !== String(userId));
+          if (other) {
+            const status = data.statuses.find((s: any) => String(s.userId) === String(other.participantId));
+            if (status) return { ...c, online: status.online };
+          }
+          return c;
+        });
+      });
+    });
+
+
 
     socket.on("chat:status_changed", (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
@@ -576,11 +616,9 @@ const ChatPage: React.FC = () => {
       socket.off("chat:message_edited", handleMessageEdited);
       socket.off("chat:message_deleted", handleMessageDeleted);
       socket.off("chat:reaction_updated", handleReactionUpdated);
-      socket.off("call:incoming", handleIncomingCall);
-      socket.off("call:accepted", handleCallAccepted);
-      socket.off("call:rejected", handleCallRejected);
-      socket.off("call:ended", handleCallEnded);
-      socket.off("call:ice_candidate", handleIceCandidate);
+      socket.off("presence:update");
+      socket.off("presence:statuses");
+
       socket.off("chat:status_changed");
       if (conversationId) socket.emit("chat:clear-active-conversation");
     };
@@ -599,225 +637,25 @@ const ChatPage: React.FC = () => {
     handleMessageEdited,
     handleMessageDeleted,
     handleReactionUpdated,
-    handleIncomingCall,
-    handleCallAccepted,
-    handleCallRejected,
-    handleCallEnded,
-    handleIceCandidate,
   ]);
 
-  const setupPeerConnection = (otherId: string, otherType: string) => {
-    if (pcRef.current) return pcRef.current;
 
-    const pc = new RTCPeerConnection(iceConfig);
 
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("call:ice_candidate", {
-          otherId,
-          otherType,
-          candidate: event.candidate,
-        });
-      }
-    };
 
-    pc.ontrack = (event) => {
-      console.log("[ChatPage] Received remote track", event.streams[0]);
-      remoteStreamRef.current = event.streams[0];
-      if (remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = event.streams[0];
-      }
-    };
 
-    pc.onconnectionstatechange = () => {
-      console.log("[ChatPage] Connection state:", pc.connectionState);
-      if (
-        pc.connectionState === "disconnected" ||
-        pc.connectionState === "failed" ||
-        pc.connectionState === "closed"
-      ) {
-        handleCallEnded();
-      }
-    };
-
-    pcRef.current = pc;
-    return pc;
-  };
-
-  const cleanupWebRTC = () => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
-      localStreamRef.current = null;
-    }
-    if (pcRef.current) {
-      pcRef.current.close();
-      pcRef.current = null;
-    }
-    remoteStreamRef.current = null;
-    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
-  };
-
-  const startCall = async (isVideo: boolean) => {
-    const other = activeConversation?.participants?.find(
-      (p) => String(p.participantId) !== String(userId),
-    );
-    if (!other) return;
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: isVideo,
-      });
-      localStreamRef.current = stream;
-
-      const pc = setupPeerConnection(
-        other.participantId,
-        other.participantType,
-      );
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-      const offer = await pc.createOffer();
-      // Munge SDP for 2G optimization (12kbps)
-      offer.sdp = setOpusBitrate(offer.sdp!, 12000);
-      await pc.setLocalDescription(offer);
-
-      setOutgoingCall({
-        recipientId: other.participantId,
-        recipientType: other.participantType,
-        isVideo: false,
-      });
-      socket.emit("call:initiate", {
-        recipientId: other.participantId,
-        recipientType: other.participantType,
-        isVideo: false,
-        offer,
-        callerName: myName,
-        conversationId,
-        tenantId: student?.tenantId || admin?.tenantId,
-      });
-    } catch (err: any) {
-      console.error("Failed to get media", err);
-      error("Media access denied. Please enable microphone.");
-    }
-  };
-
-  const acceptCall = async () => {
-    if (!incomingCall) return;
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: incomingCall.isVideo,
-      });
-      localStreamRef.current = stream;
-
-      const pc = setupPeerConnection(
-        incomingCall.callerId,
-        incomingCall.callerType,
-      );
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-      if (incomingCall.offer) {
-        await pc.setRemoteDescription(
-          new RTCSessionDescription(incomingCall.offer),
-        );
-        const answer = await pc.createAnswer();
-        // Munge SDP for 2G optimization (12kbps)
-        answer.sdp = setOpusBitrate(answer.sdp!, 12000);
-        await pc.setLocalDescription(answer);
-
-        socket.emit("call:accept", {
-          callerId: incomingCall.callerId,
-          callerType: incomingCall.callerType,
-          answer,
-          acceptorName: myName,
-        });
-      }
-
-      setActiveCall({
-        otherId: incomingCall.callerId,
-        otherType: incomingCall.callerType,
-        isVideo: incomingCall.isVideo,
-        name: incomingCall.callerName,
-      });
-      setIncomingCall(null);
-    } catch (err) {
-      console.error("Failed to accept call", err);
-      error("Could not access microphone/camera");
-      socket.emit("call:reject", {
-        callerId: incomingCall.callerId,
-        callerType: incomingCall.callerType,
-        conversationId: incomingCall.conversationId,
-        tenantId: incomingCall.tenantId,
-      });
-      setIncomingCall(null);
-    }
-  };
-
-  const endCall = () => {
-    const otherId =
-      activeCall?.otherId ||
-      outgoingCall?.recipientId ||
-      incomingCall?.callerId;
-    const otherType =
-      activeCall?.otherType ||
-      outgoingCall?.recipientType ||
-      incomingCall?.callerType;
-
-    if (otherId && otherType) {
-      const status = activeCall
-        ? "COMPLETED"
-        : outgoingCall
-          ? "CANCELLED"
-          : "MISSED";
-      socket.emit("call:hangup", {
-        otherId,
-        otherType,
-        conversationId,
-        duration: callDuration,
-        status,
-        tenantId: student?.tenantId || admin?.tenantId,
-      });
-    }
-    handleCallEnded();
-  };
-
-  // Media Controls Logic
+  // Request initial presence for all friends in sidebar
   useEffect(() => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = !isMuted;
-      });
-    }
-  }, [isMuted]);
+    if (conversations && conversations.length > 0) {
+      const usersToCheck = conversations.map((c: any) => {
+        const other = c.participants?.find((p: any) => String(p.participantId) !== String(userId));
+        return { userId: other?.participantId, userType: other?.participantType };
+      }).filter((u: any) => u.userId);
 
-  useEffect(() => {
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.volume = isSpeakerOn ? 1.0 : 0.5; // Simplified speaker logic
-      // In real mobile apps, this switches between earpiece and speaker.
-      // In web, we just adjust volume or use setSinkId if supported.
+      if (usersToCheck.length > 0) {
+        socket.emit("presence:get_statuses", { users: usersToCheck });
+      }
     }
-  }, [isSpeakerOn]);
-
-  // Call Duration Timer
-  useEffect(() => {
-    let interval: any;
-    if (activeCall) {
-      setCallDuration(0);
-      interval = setInterval(() => {
-        setCallDuration((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setCallDuration(0);
-    }
-    return () => clearInterval(interval);
-  }, [activeCall]);
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  }, [conversations?.length, socket, userId]);
 
   const otherUser = activeConversation?.participants?.find(
     (p) => String(p.participantId) !== String(userId),
@@ -930,7 +768,21 @@ const ChatPage: React.FC = () => {
       (response: any) => {
         console.log("Message send response:", response);
         if (response.success) {
-          // Success handled in socket event 'new_message' or 'chat:status'
+          // Immediately update optimistic status to SENT using real ID if available
+          queryClient.setQueryData<InfiniteData<ChatMessage[]>>(
+            ["chat", "messages", conversationId],
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                pages: oldData.pages.map((page) =>
+                  page.map((m) =>
+                    m._id === tempId ? { ...m, _id: response.data?._id || m._id, status: "SENT" } : m
+                  )
+                ),
+              };
+            }
+          );
         } else {
           // Handle error (e.g. mark optimistic message as failed)
           queryClient.setQueryData<InfiniteData<ChatMessage[]>>(
@@ -980,6 +832,16 @@ const ChatPage: React.FC = () => {
 
     const content = type === "TEXT" ? messageInput : imageUrl || "";
 
+    if (type === "TEXT") {
+      const phoneRegex = /\b\d{10}\b/;
+      const socialRegex = /(instagram\.com|facebook\.com|ig\.me|snapchat\.com|x\.com|twitter\.com|t\.me|wa\.me|wa\.link|telegram\.org)/i;
+      
+      if (phoneRegex.test(content) || socialRegex.test(content)) {
+        error("Security Protocol: Sharing external contact identifiers or social networks is prohibited.");
+        return;
+      }
+    }
+
     // --- OPTIMISTIC UPDATE ---
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: ChatMessage = {
@@ -1027,7 +889,23 @@ const ChatPage: React.FC = () => {
         tempId,
       },
       (response: any) => {
-        if (!response.success) {
+        if (response.success) {
+          // Immediately update optimistic status to SENT using real ID if available
+          queryClient.setQueryData<InfiniteData<ChatMessage[]>>(
+            ["chat", "messages", conversationId],
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                pages: oldData.pages.map((page) =>
+                  page.map((m) =>
+                    m._id === tempId ? { ...m, _id: response.data?._id || m._id, status: "SENT" } : m
+                  )
+                ),
+              };
+            }
+          );
+        } else {
           // Handle error
           queryClient.setQueryData<InfiniteData<ChatMessage[]>>(
             ["chat", "messages", conversationId],
@@ -1050,47 +928,63 @@ const ChatPage: React.FC = () => {
 
   // Scroll to bottom on new messages
   useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    const isNearBottom =
+      scrollContainer.scrollHeight -
+      scrollContainer.scrollTop -
+      scrollContainer.clientHeight <
+      200;
+
+    // Scroll on new messages
     if (messages.length > 0) {
       const latestMsg = messages[messages.length - 1];
       const isNewMessage = latestMsg._id !== lastMessageIdRef.current;
 
       if (isNewMessage) {
         const isMine = String(latestMsg.senderId) === String(userId);
-        const scrollContainer = scrollRef.current;
-
-        if (scrollContainer) {
-          const isNearBottom =
-            scrollContainer.scrollHeight -
-              scrollContainer.scrollTop -
-              scrollContainer.clientHeight <
-            200;
-
-          // Scroll if it's my message, or we're near bottom, or it's the initial load (ref is null)
-          if (isMine || isNearBottom || lastMessageIdRef.current === null) {
-            setTimeout(() => {
-              scrollContainer.scrollTop = scrollContainer.scrollHeight;
-            }, 50); // Small delay to ensure DOM is ready
-          }
+        if (isMine || isNearBottom || lastMessageIdRef.current === null) {
+          setTimeout(() => {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+          }, 50);
         }
         lastMessageIdRef.current = latestMsg._id;
       }
     } else {
       lastMessageIdRef.current = null;
     }
-  }, [messages, userId, conversationId]); // Added conversationId to trigger on change
+
+    // Scroll when someone starts typing if we're already at the bottom
+    if (isTyping && isNearBottom) {
+      setTimeout(() => {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }, 50);
+    }
+  }, [messages, userId, conversationId, isTyping]);
 
   return (
     <>
-      <div className="flex h-full bg-slate-50 rounded-none sm:rounded-3xl border-x border-b sm:border border-slate-200 shadow-sm overflow-hidden">
+      <div className="flex flex-1 w-full min-w-0 max-w-[100vw] h-full bg-slate-50 rounded-none sm:rounded-3xl border-x border-b sm:border border-slate-200 shadow-sm overflow-hidden relative">
         {/* Sidebar */}
         <aside
           className={`w-full md:w-80 border-r border-slate-100 bg-white/80 flex flex-col ${conversationId ? "hidden md:flex" : "flex"}`}
         >
           <div className="p-6 space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-black text-slate-900 tracking-tighter italic uppercase">
-                Terminal <span className="text-blue-600">Comms</span>
-              </h2>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden"
+                  onClick={toggleSidebar}
+                >
+                  <Menu size={20} />
+                </Button>
+                <h2 className="text-xl font-black text-slate-900 tracking-tighter italic uppercase">
+                  Terminal <span className="text-blue-600">Comms</span>
+                </h2>
+              </div>
               {unreadCount > 0 && (
                 <div className="bg-red-500 text-white text-[10px] font-black h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center shadow-md">
                   {unreadCount}
@@ -1107,6 +1001,53 @@ const ChatPage: React.FC = () => {
                 className="pl-9 bg-slate-50 border-none rounded-xl text-xs font-bold uppercase tracking-tight h-10"
               />
             </div>
+
+            {/* Online Users Horizontal List */}
+            {conversations?.some(c => c.online) && (
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    Live Signals
+                  </h3>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] font-bold text-emerald-600 uppercase">Active</span>
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-none no-scrollbar">
+                  {conversations
+                    .filter(c => c.online)
+                    .map(conv => {
+                      const other = conv.participants?.find(p => String(p.participantId) !== String(userId));
+                      return (
+                        <button
+                          key={`online-${conv._id}`}
+                          onClick={() => navigate(`${chatPathBase}/${conv._id}`)}
+                          className="flex flex-col items-center gap-2 shrink-0 group transition-all duration-300"
+                        >
+                          <div className="relative">
+                            {other?.profilePicture ? (
+                              <img
+                                src={other.profilePicture}
+                                alt=""
+                                className="h-12 w-12 rounded-2xl object-cover border-2 border-white shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-300"
+                              />
+                            ) : (
+                              <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center font-black text-xs text-blue-600 border-2 border-white group-hover:scale-105 transition-all duration-300 uppercase">
+                                {other?.name?.[0]}
+                              </div>
+                            )}
+                            <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-[0_0_8px_rgba(16,185,129,0.3)] group-hover:scale-110 transition-transform" />
+                          </div>
+                          <span className="text-[9px] font-black uppercase tracking-tight text-slate-500 group-hover:text-blue-600 truncate w-12 text-center transition-colors">
+                            {other?.name?.split(' ')[0]}
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 space-y-1">
@@ -1146,7 +1087,7 @@ const ChatPage: React.FC = () => {
                         )?.name?.[0] || "?"}
                       </div>
                     )}
-                    <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-white" />
+                    <div className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white transition-all duration-300 ${conv.online ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-slate-300"}`} />
                   </div>
                   <div className="flex-1 text-left min-w-0">
                     <div className="flex justify-between items-center mb-1">
@@ -1279,57 +1220,122 @@ const ChatPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 sm:gap-4">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                    onClick={() => startCall(false)}
+                    className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    onClick={() => handleStartCall(false)}
+                    disabled={isBlocked}
                   >
-                    <Phone size={18} className="font-bold" />
+                    <Phone size={18} />
                   </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
+                        <MoreVertical size={18} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-xl border-slate-100 bg-white z-50">
+                      <DropdownMenuItem 
+                        onClick={handleToggleMute}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer focus:bg-slate-50 transition-colors"
+                      >
+                        {isMutedNotifications ? (
+                          <>
+                            <Volume2 size={16} className="text-emerald-500" />
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-black uppercase tracking-tight">Unmute signals</span>
+                              <span className="text-[9px] font-bold text-slate-400">Receive notifications</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <VolumeX size={16} className="text-amber-500" />
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-black uppercase tracking-tight">Mute signals</span>
+                              <span className="text-[9px] font-bold text-slate-400">Silence notifications</span>
+                            </div>
+                          </>
+                        )}
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem 
+                        onClick={handleToggleBlock}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer focus:bg-red-50 group transition-colors"
+                      >
+                        {isBlocked ? (
+                          <>
+                            <Shield size={16} className="text-blue-500" />
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-black uppercase tracking-tight">Unblock Signal</span>
+                              <span className="text-[9px] font-bold text-slate-400">Restore communication</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <ShieldOff size={16} className="text-red-500 group-hover:scale-110 transition-transform" />
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-black text-red-600 uppercase tracking-tight">Block Signal</span>
+                              <span className="text-[9px] font-bold text-red-400/80">Cut off transmission</span>
+                            </div>
+                          </>
+                        )}
+                      </DropdownMenuItem>
+
+                      {!isAdmin && otherUser?.participantType === "Student" && (
+                        <>
+                          <DropdownMenuSeparator className="bg-slate-50 my-1" />
+                          <DropdownMenuItem 
+                            onClick={() => setIsReportModalOpen(true)}
+                            className="flex items-center gap-3 p-3 rounded-xl cursor-pointer focus:bg-orange-50 group transition-colors"
+                          >
+                            <Flag size={16} className="text-orange-500 group-hover:animate-bounce transition-transform" />
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-black text-orange-600 uppercase tracking-tight">Report User</span>
+                              <span className="text-[9px] font-bold text-orange-400/80">Flag spam or harassment</span>
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={handleRemoveFriend}
+                            className="flex items-center gap-3 p-3 rounded-xl cursor-pointer focus:bg-rose-50 group transition-colors"
+                          >
+                            <UserX size={16} className="text-rose-500 group-hover:rotate-12 transition-transform" />
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-black text-rose-600 uppercase tracking-tight">Remove Friend</span>
+                              <span className="text-[9px] font-bold text-rose-400/80">Delete from contacts</span>
+                            </div>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      
+                      <DropdownMenuSeparator className="bg-slate-50 my-1" />
+                      <DropdownMenuItem 
+                        onClick={() => setIsSearchOpen(true)}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer focus:bg-slate-50 transition-colors sm:hidden"
+                      >
+                        <Search size={16} className="text-slate-400" />
+                        <div className="flex flex-col text-left">
+                          <span className="text-xs font-black uppercase tracking-tight">Search Signal</span>
+                          <span className="text-[9px] font-bold text-slate-400">Find in history</span>
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`rounded-xl transition-all ${isSearchOpen ? "bg-blue-600 text-white" : ""}`}
+                    className={`hidden sm:flex rounded-xl transition-all ${isSearchOpen ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-slate-400 hover:bg-blue-50 hover:text-blue-600"}`}
                     onClick={() => setIsSearchOpen(!isSearchOpen)}
                   >
                     <Search size={18} />
                   </Button>
-                  <div className="relative group/menu">
-                    <Button variant="ghost" size="icon" className="rounded-xl">
-                      <MoreVertical size={18} />
-                    </Button>
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 hidden group-hover/menu:block z-50 animate-in fade-in zoom-in duration-200">
-                      <button
-                        onClick={() =>
-                          socket.emit("chat:toggle-mute", { conversationId })
-                        }
-                        className="w-full px-4 py-2.5 text-left text-xs font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-50 flex items-center gap-3"
-                      >
-                        <BellOff size={14} /> Mute Signals
-                      </button>
-                      <button
-                        onClick={() =>
-                          socket.emit("chat:toggle-block", { conversationId })
-                        }
-                        className="w-full px-4 py-2.5 text-left text-xs font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 flex items-center gap-3"
-                      >
-                        <ShieldOff size={14} /> Block Peer
-                      </button>
-                      <hr className="my-1 border-slate-100" />
-                      <button
-                        onClick={() =>
-                          socket.emit("chat:delete-conversation", {
-                            conversationId,
-                          })
-                        }
-                        className="w-full px-4 py-2.5 text-left text-xs font-bold uppercase tracking-widest text-red-600 hover:bg-red-50 flex items-center gap-3"
-                      >
-                        <XCircle size={14} /> Wipe Terminal
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </header>
 
@@ -1378,9 +1384,9 @@ const ChatPage: React.FC = () => {
                             <div
                               className={`flex flex-col gap-1.5 max-w-[80%] ${isMine ? "items-end" : "items-start"}`}
                             >
-                              <div className="relative group">
+                              <div className="relative group outline-none w-full flex flex-col items-end" style={{ alignItems: isMine ? 'flex-end' : 'flex-start' }} tabIndex={0}>
                                 <div
-                                  className={`px-5 py-4 rounded-[32px] shadow-sm relative overflow-hidden backdrop-blur-3xl transform transition-all duration-300 border
+                                  className={`px-5 py-4 rounded-[32px] shadow-sm relative overflow-hidden backdrop-blur-3xl transform transition-all duration-300 border inline-block max-w-full
                                                     ${
                                                       isMine
                                                         ? "bg-blue-600 text-white border-blue-400/30"
@@ -1505,6 +1511,20 @@ const ChatPage: React.FC = () => {
                                         View PDF
                                       </a>
                                     </div>
+                                  ) : msg.contentType === "CALL" ? (
+                                    <div className={`p-1 flex items-center gap-3 ${isMine ? "text-white" : "text-slate-800"}`}>
+                                      <div className={`h-10 w-10 flex-shrink-0 rounded-full flex items-center justify-center shadow-inner ${
+                                        msg.content === "Missed Call" ? "bg-red-500 text-white shadow-red-500/30" : "bg-emerald-500 text-white shadow-emerald-500/30"
+                                      }`}>
+                                        {msg.content === "Missed Call" ? <PhoneOff size={16} /> : <Phone size={16} />}
+                                      </div>
+                                      <div className="flex flex-col pr-2">
+                                        <span className="text-sm font-bold tracking-tight">{msg.content?.startsWith("Audio Call") ? "Call Ended" : msg.content}</span>
+                                        <span className="text-[9px] opacity-70 font-black uppercase tracking-widest mt-0.5">
+                                          {msg.content === "Missed Call" ? "Signal Dropped" : msg.content?.replace("Audio Call ", "") || "Secure Frequency"}
+                                        </span>
+                                      </div>
+                                    </div>
                                   ) : (
                                     <>
                                       <p className="text-xs font-medium leading-relaxed">
@@ -1550,12 +1570,12 @@ const ChatPage: React.FC = () => {
                                   </div>
                                 )}
 
-                                {/* Reaction Picker */}
+                                {/* Reaction Picker & Actions (Bottom Toolbar style) */}
                                 {!msg.isDeleted && !editingMessageId && (
                                   <div
-                                    className={`absolute top-0 ${isMine ? "-left-44" : "-right-44"} -translate-y-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-30 p-2`}
+                                    className={`absolute -bottom-10 ${isMine ? "right-0" : "left-0"} opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 transition-all duration-300 z-30 flex gap-2 items-center`}
                                   >
-                                    <div className="bg-slate-900/90 backdrop-blur-xl rounded-full p-1.5 flex gap-1 border border-white/10 shadow-2xl">
+                                    <div className="bg-slate-900/90 backdrop-blur-xl rounded-full p-1.5 flex gap-1 border border-white/10 shadow-2xl mt-2">
                                       {EMOJI_OPTIONS.map((emoji) => {
                                         const hasMyReaction =
                                           msg.reactions?.some(
@@ -1581,35 +1601,31 @@ const ChatPage: React.FC = () => {
                                         );
                                       })}
                                     </div>
+
+                                    {/* Actions Attached To Picker */}
+                                    {isMine && (
+                                      <div className="flex gap-2 items-center bg-slate-900/90 backdrop-blur-xl rounded-full p-1.5 border border-white/10 shadow-2xl mt-2">
+                                        <button
+                                          onClick={() => {
+                                            setEditingMessageId(msg._id);
+                                            setEditContent(msg.content || "");
+                                          }}
+                                          className="h-8 w-8 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-all"
+                                          title="Edit Signal"
+                                        >
+                                          <Edit2 size={12} />
+                                        </button>
+                                        <button
+                                          onClick={() => setDeletingMessageId(msg._id)}
+                                          className="h-8 w-8 rounded-full flex items-center justify-center text-red-400 hover:text-white hover:bg-red-500/50 transition-all"
+                                          title="Drop Signal"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
-
-                                {/* Actions */}
-                                {isMine &&
-                                  !msg.isDeleted &&
-                                  !editingMessageId && (
-                                    <div className="absolute top-1/2 -left-20 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-2 items-center">
-                                      <button
-                                        onClick={() => {
-                                          setEditingMessageId(msg._id);
-                                          setEditContent(msg.content || "");
-                                        }}
-                                        className="p-2 bg-white shadow-sm border border-slate-100 rounded-full text-slate-400 hover:text-blue-600 hover:scale-110 transition-all"
-                                        title="Edit Signal"
-                                      >
-                                        <Edit2 size={12} />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          setDeletingMessageId(msg._id)
-                                        }
-                                        className="p-2 bg-white shadow-sm border border-slate-100 rounded-full text-slate-400 hover:text-red-600 hover:scale-110 transition-all"
-                                        title="Drop Signal"
-                                      >
-                                        <Trash2 size={12} />
-                                      </button>
-                                    </div>
-                                  )}
 
                                 {/* Delete Confirmation */}
                                 {deletingMessageId === msg._id && (
@@ -1699,6 +1715,20 @@ const ChatPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {isTyping && (
+                  <div className="flex justify-start animate-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex flex-col gap-1.5 max-w-[80%] items-start">
+                      <div className="relative group">
+                        <div className="px-5 py-3 rounded-[24px] shadow-sm relative overflow-hidden backdrop-blur-3xl transform transition-all duration-300 border bg-white text-slate-900 border-slate-100 flex items-center gap-1">
+                          <span className="typing-dot" />
+                          <span className="typing-dot" />
+                          <span className="typing-dot" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Input Area */}
@@ -1707,27 +1737,23 @@ const ChatPage: React.FC = () => {
                   className="flex items-center gap-3"
                   onSubmit={(e) => handleSendMessage(e)}
                 >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className={`shrink-0 h-10 w-10 border border-slate-100 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 ${isUploading ? "animate-pulse" : ""}`}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
+                  <label
+                    className={`shrink-0 h-10 w-10 border border-slate-100 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center cursor-pointer transition-colors ${isUploading ? "animate-pulse opacity-50 pointer-events-none" : ""}`}
                   >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      disabled={isUploading}
+                    />
                     {isUploading ? (
                       <Loader2 className="animate-spin" size={20} />
                     ) : (
                       <ImageIcon size={20} />
                     )}
-                  </Button>
+                  </label>
                   <Input
                     value={messageInput}
                     onChange={(e) => {
@@ -1789,171 +1815,6 @@ const ChatPage: React.FC = () => {
             </div>
           )}
         </main>
-
-        {/* Incoming Call Overlay */}
-        {incomingCall && (
-          <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-2xl flex flex-col items-center justify-center animate-in fade-in duration-500">
-            <div className="relative">
-              <div className="h-32 w-32 rounded-[48px] bg-blue-600 animate-pulse flex items-center justify-center text-white shadow-[0_0_80px_rgba(37,99,235,0.4)]">
-                <Phone size={48} className="animate-bounce" />
-              </div>
-              <div className="absolute -top-4 -right-4 h-8 w-8 bg-emerald-500 rounded-full border-4 border-slate-900 animate-ping" />
-            </div>
-
-            <div className="mt-12 text-center space-y-2">
-              <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none">
-                {incomingCall.callerName || "Incoming Signal"}
-              </h2>
-              <p className="text-blue-400 text-xs font-black uppercase tracking-[0.2em]">
-                Priority encrypted channel
-              </p>
-            </div>
-
-            <div className="mt-16 flex items-center gap-8">
-              <button
-                onClick={() => {
-                  socket.emit("call:reject", {
-                    callerId: incomingCall.callerId,
-                    callerType: incomingCall.callerType,
-                  });
-                  setIncomingCall(null);
-                }}
-                className="group"
-              >
-                <div className="h-16 w-16 rounded-full bg-red-500/10 border-2 border-red-500/20 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all transform group-hover:rotate-12">
-                  <PhoneOff size={24} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-red-500 mt-3 block text-center">
-                  Terminate
-                </span>
-              </button>
-
-              <button onClick={acceptCall} className="group">
-                <div className="h-20 w-20 rounded-full bg-emerald-500 shadow-[0_0_40px_rgba(16,185,129,0.3)] flex items-center justify-center text-white transition-all transform group-hover:scale-110">
-                  <Phone size={28} className="animate-pulse" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mt-4 block text-center">
-                  Establish Link
-                </span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Outgoing Call Overlay */}
-        {outgoingCall && (
-          <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-2xl flex flex-col items-center justify-center animate-in fade-in duration-500">
-            <div className="relative">
-              <div className="h-32 w-32 rounded-[48px] bg-blue-600 animate-pulse flex items-center justify-center text-white shadow-[0_0_80px_rgba(37,99,235,0.4)]">
-                <Phone size={48} className="animate-bounce" />
-              </div>
-            </div>
-
-            <div className="mt-12 text-center space-y-2">
-              <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none">
-                {otherName}
-              </h2>
-              <p className="text-blue-400 text-xs font-black uppercase tracking-[0.2em]">
-                Contacting secure signal...
-              </p>
-            </div>
-
-            <div className="mt-16 flex items-center justify-center">
-              <button onClick={endCall} className="group">
-                <div className="h-20 w-20 rounded-full bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.3)] flex items-center justify-center text-white transition-all transform group-hover:scale-110">
-                  <PhoneOff size={28} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-red-500 mt-4 block text-center">
-                  Cancel Signal
-                </span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Active Call Overlay (Enhanced Instagram Style) */}
-        {activeCall && (
-          <div className="fixed inset-0 z-[110] bg-slate-900/95 backdrop-blur-2xl flex flex-col items-center justify-between pb-16 animate-in zoom-in duration-500">
-            {/* Header Info */}
-            <div className="mt-24 text-center space-y-4">
-              <div className="relative inline-block">
-                <div className="h-32 w-32 rounded-[48px] bg-slate-800 border-2 border-slate-700/50 flex items-center justify-center text-white shadow-2xl relative z-10">
-                  <Phone size={48} className="text-blue-500" />
-                </div>
-                <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full scale-150" />
-              </div>
-
-              <div className="space-y-2">
-                <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none">
-                  {activeCall.name || otherName}
-                </h2>
-                <p className="text-blue-400 text-xl font-mono tracking-widest">
-                  {formatDuration(callDuration)}
-                </p>
-              </div>
-            </div>
-
-            {/* Control Panel */}
-            <div className="w-full max-w-sm px-8 space-y-12">
-              {/* Media Controls */}
-              <div className="flex items-center justify-around bg-slate-800/40 backdrop-blur-xl rounded-[40px] p-6 border border-white/5 shadow-2xl">
-                <button
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={`group flex flex-col items-center gap-3 transition-all ${isMuted ? "text-white" : "text-slate-400"}`}
-                >
-                  <div
-                    className={`h-16 w-16 rounded-3xl flex items-center justify-center transition-all ${isMuted ? "bg-white text-slate-900" : "bg-slate-700/50 hover:bg-slate-700"}`}
-                  >
-                    {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    {isMuted ? "Unmute" : "Mute"}
-                  </span>
-                </button>
-
-                <button
-                  className={`group flex flex-col items-center gap-3 transition-all ${isSpeakerOn ? "text-white" : "text-slate-400"}`}
-                  onClick={() => setIsSpeakerOn(!isSpeakerOn)}
-                >
-                  <div
-                    className={`h-16 w-16 rounded-3xl flex items-center justify-center transition-all ${isSpeakerOn ? "bg-white text-slate-900" : "bg-slate-700/50 hover:bg-slate-700"}`}
-                  >
-                    {isSpeakerOn ? (
-                      <Volume2 size={24} />
-                    ) : (
-                      <VolumeX size={24} />
-                    )}
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    Speaker
-                  </span>
-                </button>
-
-                <div className="flex flex-col items-center gap-3 text-emerald-400">
-                  <div className="h-16 w-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                    <ShieldOff size={24} className="animate-pulse" />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    Secure 2G
-                  </span>
-                </div>
-              </div>
-
-              {/* End Call Button */}
-              <div className="flex justify-center">
-                <button onClick={endCall} className="group relative">
-                  <div className="absolute inset-0 bg-red-600 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity rounded-full" />
-                  <div className="h-24 w-24 rounded-full bg-red-500 shadow-2xl flex items-center justify-center text-white transform transition-all hover:scale-110 active:scale-95 relative">
-                    <PhoneOff size={36} />
-                  </div>
-                  <span className="mt-4 block text-[10px] font-black uppercase tracking-[0.3em] text-red-500 text-center">
-                    End Signal
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         {isEditorOpen && editingImage && (
           <ImageEditor
             imageSrc={editingImage}
@@ -1961,7 +1822,6 @@ const ChatPage: React.FC = () => {
             onCancel={handleEditorCancel}
           />
         )}
-        <audio ref={remoteAudioRef} autoPlay />
       </div>
       {/* Lightbox */}
       {selectedImageForLightbox && (
@@ -1985,6 +1845,95 @@ const ChatPage: React.FC = () => {
               alt=""
               className="max-w-full max-h-full object-contain shadow-2xl shadow-blue-500/10 rounded-lg animate-in zoom-in duration-500"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Report User Modal */}
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
+            <header className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-orange-50/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center">
+                  <Flag className="text-orange-600" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Report Signal</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Help us keep the network safe</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full hover:bg-white transition-colors"
+                onClick={() => setIsReportModalOpen(false)}
+              >
+                <XCircle size={20} className="text-slate-400" />
+              </Button>
+            </header>
+
+            <div className="p-8 space-y-6">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Reason for Report
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["SPAM", "HARASSMENT", "FAKE_ACCOUNT", "INAPPROPRIATE_CONTENT", "OTHER"].map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => setReportReason(reason)}
+                      className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-tight transition-all text-left border
+                        ${reportReason === reason 
+                          ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20" 
+                          : "bg-slate-50 text-slate-600 border-slate-100 hover:border-slate-200 hover:bg-white"
+                        }`}
+                    >
+                      {reason.replace("_", " ")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Additional Details
+                </label>
+                <textarea
+                  placeholder="Provide any extra context that will help us investigate..."
+                  value={reportDescription}
+                  onChange={(e) => setReportDescription(e.target.value)}
+                  className="w-full h-32 bg-slate-50 border-slate-100 rounded-2xl p-4 text-xs font-semibold focus:ring-2 focus:ring-slate-900/5 focus:bg-white transition-all resize-none placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <Button
+                  variant="ghost"
+                  className="flex-1 h-14 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50"
+                  onClick={() => setIsReportModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 h-14 rounded-2xl text-xs font-black uppercase tracking-widest bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-600/20 transition-all disabled:opacity-50"
+                  disabled={!reportReason || isSubmittingReport}
+                  onClick={handleReportUser}
+                >
+                  {isSubmittingReport ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    "Submit Report"
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 italic text-center">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                Reports are confidential and reviewed by our security protocols
+              </span>
+            </div>
           </div>
         </div>
       )}

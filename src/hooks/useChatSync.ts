@@ -24,6 +24,9 @@ export function useChatSync() {
     socket.on("new_message", (message: any) => {
       const isForMe = String(message.recipientId) === String(userId);
       if (isForMe) {
+          // Emit delivered immediately if recipient is online (this hook runs globally)
+          socket.emit("chat:delivered", { messageId: message._id });
+
           // Play sound
           import("../utils/notificationSound").then(({ playNotificationSound }) => {
             playNotificationSound();
@@ -79,12 +82,25 @@ export function useChatSync() {
       }
     });
 
-    // Request initial count
+    socket.on("chat:status", (data: any) => {
+      console.log("[ChatSync] Status update:", data.status);
+      queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+    });
+
+    socket.on("chat:status_bulk", (data: any) => {
+      console.log("[ChatSync] Bulk status update:", data.status);
+      queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] });
+    });
+
+    // Request initial count and sync missed deliveries
     socket.emit("chat:get_unread_count");
+    socket.emit("chat:sync_delivery");
 
     return () => {
       socket.off("chat:unread_count_update");
       socket.off("new_message");
+      socket.off("chat:status");
+      socket.off("chat:status_bulk");
       socket.off("call:offer");
       socket.off("call:end");
       socket.off("call:timeout");

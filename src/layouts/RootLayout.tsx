@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import Loader from "../components/Loader";
 import { useSocket } from "../hooks/useSocket";
-import { LayoutDashboard, Bell, User, Users, CreditCard } from "lucide-react";
+import { LayoutDashboard, Bell, User, Users, CreditCard, IndianRupee } from "lucide-react";
 
 import { useUIStore } from "../stores/uiStore";
 import { Header } from "../components/Header";
@@ -12,7 +12,6 @@ import { EntityDrawer } from "../components/shared/EntityDrawer";
 import { useNotificationSocket } from "../features/notifications/hooks/useNotificationSocket";
 import { useSessionStore } from "../stores/sessionStore";
 import { useChatSync } from "../hooks/useChatSync";
-import { CallOverlay } from "../features/chat/components/CallOverlay";
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useSocket();
@@ -42,6 +41,7 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       ]
     : [
         { label: "Home", icon: LayoutDashboard, path: "/student/dashboard" },
+        { label: "Payments", icon: IndianRupee, path: "/student/payments" },
         { label: "Fees", icon: CreditCard, path: "/student/fees" },
         { label: "Alerts", icon: Bell, path: "/student/notifications" },
         { label: "Profile", icon: User, path: "/student/profile" },
@@ -53,7 +53,7 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <ErrorBoundary>
         <div className="h-screen flex flex-col bg-[#f8fafc] overflow-hidden">
           {/* 1. HEADER */}
-          <div className="h-16 flex-shrink-0 z-[60]">
+          <div className={`h-16 flex-shrink-0 z-[60] ${isChatPage ? "hidden sm:block" : ""}`}>
             <Header />
           </div>
 
@@ -135,8 +135,6 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             student={selectedEntity}
           />
 
-          {/* 6. CALL OVERLAY */}
-          <CallOverlay />
         </div>
     </ErrorBoundary>
   );

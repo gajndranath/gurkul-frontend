@@ -1,0 +1,12 @@
+﻿src/features/chat/ChatPage.tsx(13,3): error TS6133: 'LogOut' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(34,1): error TS6133: 'useChatStore' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(53,9): error TS6133: 'myName' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(70,10): error TS6133: 'incomingCall' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(70,24): error TS6133: 'setIncomingCall' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(71,10): error TS6133: 'outgoingCall' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(71,24): error TS6133: 'setOutgoingCall' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(72,22): error TS6133: 'setActiveCall' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(73,10): error TS6133: 'callDuration' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(524,9): error TS6133: 'formatDuration' is declared but its value is never read.
+src/features/chat/ChatPage.tsx(661,9): error TS6133: 'handleEditorCancel' is declared but its value is never read.
+src/stores/chatStore.ts(4,11): error TS6196: 'CallData' is declared but never used.

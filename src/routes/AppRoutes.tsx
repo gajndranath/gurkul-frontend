@@ -43,6 +43,10 @@ const StudentFeePage = lazy(
   () => import("../features/students/StudentFeePage"),
 );
 
+const StudentPaymentsPage = lazy(
+  () => import("../features/student/payments/StudentPaymentsPage"),
+);
+
 const ForgotPasswordPage = lazy(
   () => import("@/features/auth/components/ForgotPasswordPage"),
 );
@@ -82,6 +86,10 @@ const AdminAttendancePage = lazy(
 
 const AdminProfilePage = lazy(
   () => import("../features/admin/profile/AdminProfilePage"),
+);
+
+const ModerationPage = lazy(
+  () => import("../features/admin/moderation/ModerationPage"),
 );
 
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
@@ -316,6 +324,18 @@ const routes: RouteObject[] = [
             <RootLayout>
               <Suspense fallback={<Loader />}>
                 <StudentProfilePage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "payments",
+        element: (
+          <ProtectedRoute allowedRole="STUDENT">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <StudentPaymentsPage />
               </Suspense>
             </RootLayout>
           </ProtectedRoute>
@@ -569,6 +589,18 @@ const routes: RouteObject[] = [
           </ProtectedRoute>
         ),
       },
+      {
+        path: "moderation",
+        element: (
+          <ProtectedRoute allowedRole="ADMIN">
+            <RootLayout>
+              <Suspense fallback={<Loader />}>
+                <ModerationPage />
+              </Suspense>
+            </RootLayout>
+          </ProtectedRoute>
+        ),
+      },
 
       {
         path: "login",
@@ -609,8 +641,16 @@ const routes: RouteObject[] = [
   },
 ];
 
+import { CallProvider } from "@/contexts/CallContext";
+import GlobalCallOverlay from "@/components/GlobalCallOverlay";
+
 const router = createBrowserRouter(routes);
 
-const AppRoutes: React.FC = () => <RouterProvider router={router} />;
+const AppRoutes: React.FC = () => (
+  <CallProvider>
+    <GlobalCallOverlay />
+    <RouterProvider router={router} />
+  </CallProvider>
+);
 
 export default AppRoutes;

@@ -10,6 +10,19 @@ import { requestForToken } from "./config/firebase";
 
 const queryClient = new QueryClient();
 
+import { registerSW } from "virtual:pwa-register";
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm("New content available. Reload?")) {
+      updateSW(true);
+    }
+  },
+  onOfflineReady() {
+    console.log("App ready to work offline");
+  },
+});
+
 // Register service worker for FCM
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
@@ -17,7 +30,7 @@ if ("serviceWorker" in navigator) {
       const registration = await navigator.serviceWorker.register(
         "/firebase-messaging-sw.js",
       );
-      console.log("[Main] Service Worker registered:", registration);
+      console.log("[Main] FCM Service Worker registered:", registration);
       // Request FCM token with service worker registration
       const token = await requestForToken(registration);
       if (token) {
@@ -28,7 +41,7 @@ if ("serviceWorker" in navigator) {
         );
       }
     } catch (err) {
-      console.error("[Main] Service Worker registration failed:", err);
+      console.error("[Main] FCM Service Worker registration failed:", err);
     }
   });
 }
