@@ -9,7 +9,11 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
+      injectRegister: "auto",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg", "icon-192.png", "icon-512.png"],
       manifest: {
         name: "LibraryA - Management System",
