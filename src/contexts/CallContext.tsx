@@ -20,6 +20,7 @@ interface CallContextType {
   toggleMute: () => void;
   toggleSpeaker: () => void;
   rejectCall: () => void;
+  isReconnecting: boolean;
 }
 
 const CallContext = createContext<CallContextType | null>(null);
@@ -44,6 +45,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isMuted, setIsMuted] = useState(false);
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   // WebRTC Refs
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -61,7 +63,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
       { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:19302" },
+      { urls: "stun:stun3.l.google.com:19302" },
+      // Note: For production, a TURN server (e.g. Twilio, Metered.ca) is strongly recommended 
+      // to ensure calls work across all networks (2G, Firewalls).
     ],
+    iceCandidatePoolSize: 10,
   };
 
   const setOpusBitrate = (sdp: string, bitrate: number) => {
@@ -76,7 +83,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (opusPayload) {
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].includes(`a=fmtp:${opusPayload}`)) {
-          lines[i] = lines[i] + `;maxaveragebitrate=${bitrate}`;
+          // Optimization for 2G: Low bitrate + DTX (Discontinuous Transmission) to save data
+          if (!lines[i].includes("maxaveragebitrate")) {
+            lines[i] = lines[i] + `;maxaveragebitrate=${bitrate};usedtx=1`;
+          }
           break;
         }
       }
@@ -153,12 +163,27 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     pc.onconnectionstatechange = () => {
       console.log("[CallContext] Connection state:", pc.connectionState);
-      if (
-        pc.connectionState === "disconnected" ||
-        pc.connectionState === "failed" ||
-        pc.connectionState === "closed"
-      ) {
-        handleCallEnded();
+      
+      switch (pc.connectionState) {
+        case "disconnected":
+          setIsReconnecting(true);
+          // Attempt ICE restart if it stays disconnected
+          setTimeout(() => {
+            if (pcRef.current?.connectionState === "disconnected") {
+              handleIceRestart(otherId, otherType);
+            }
+          }, 3000);
+          break;
+        case "failed":
+          setIsReconnecting(true);
+          handleIceRestart(otherId, otherType);
+          break;
+        case "connected":
+          setIsReconnecting(false);
+          break;
+        case "closed":
+          handleCallEnded();
+          break;
       }
     };
 
@@ -171,7 +196,36 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIncomingCall(null);
     setOutgoingCall(null);
     setIsRemoteMuted(false);
+    setIsReconnecting(false);
     cleanupWebRTC();
+  };
+
+  const handleIceRestart = async (otherId: string, otherType: string) => {
+    if (!pcRef.current || pcRef.current.connectionState === "connected") return;
+    
+    console.log("[CallContext] Initiating ICE Restart...");
+    try {
+      const offer = await pcRef.current.createOffer({ iceRestart: true });
+      offer.sdp = setOpusBitrate(offer.sdp!, 12000);
+      await pcRef.current.setLocalDescription(offer);
+      
+      socket.emit("call:ice_restart", {
+        recipientId: otherId,
+        recipientType: otherType,
+        offer,
+      });
+
+      // If still not connected after 15s of trying to restart, give up
+      setTimeout(() => {
+        if (pcRef.current && (pcRef.current.connectionState === "failed" || pcRef.current.connectionState === "disconnected")) {
+          console.log("[CallContext] Reconnection timeout reached.");
+          endCall();
+        }
+      }, 15000);
+    } catch (err) {
+      console.error("[CallContext] ICE Restart failed:", err);
+      endCall();
+    }
   };
 
   const startRingtone = () => {
@@ -285,6 +339,37 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socket.on("call:ended", handleCallEnded);
     socket.on("call:ice_candidate", handleIceCandidate);
     socket.on("call:mute-status", handleMuteStatus);
+    
+    socket.on("call:ice_restart", async (data: any) => {
+      console.log("[CallContext] Received ICE Restart request");
+      if (pcRef.current) {
+        try {
+          await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.offer));
+          const answer = await pcRef.current.createAnswer();
+          answer.sdp = setOpusBitrate(answer.sdp!, 12000);
+          await pcRef.current.setLocalDescription(answer);
+          
+          socket.emit("call:ice_restart_answer", {
+            recipientId: data.fromId,
+            recipientType: data.fromType,
+            answer,
+          });
+        } catch (err) {
+          console.error("[CallContext] Failed to handle ICE restart request:", err);
+        }
+      }
+    });
+
+    socket.on("call:ice_restart_answer", async (data: any) => {
+      console.log("[CallContext] Received ICE Restart answer");
+      if (pcRef.current && data.answer) {
+        try {
+          await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+        } catch (err) {
+          console.error("[CallContext] Failed to apply ICE restart answer:", err);
+        }
+      }
+    });
 
     return () => {
       socket.off("call:incoming", handleIncomingCall);
@@ -461,6 +546,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         rejectCall,
         toggleMute,
         toggleSpeaker,
+        isReconnecting,
       }}
     >
       {children}
