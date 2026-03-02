@@ -39,6 +39,7 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import { chatApi, type ChatMessage } from "./api/chatApi";
+import axiosInstance from "@/api/axiosInstance";
 import { useSessionStore } from "@/stores/sessionStore";
 import { getSocket } from "@/sockets/socket";
 import { useToast } from "@/hooks/useToast";
@@ -701,18 +702,19 @@ const ChatPage: React.FC = () => {
 
     try {
       setIsUploading(true);
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1"}/upload/image`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${useSessionStore.getState().token}`,
-          },
-          body: formData,
+      
+      // Use axiosInstance for robust mobile uploads (handles BaseURL, Auth, and Tenant ID)
+      const { data: uploadData } = await axiosInstance.post("/upload/image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
         },
-      );
-      const data = await response.json();
+      });
+
+      const data = uploadData;
       if (data.success) {
+        // Revoke the temporary preview URL to save memory on mobile
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        
         // Re-fetch latest otherUser if needed
         const currentOtherUser = activeConversation?.participants?.find(
           (p) => p.participantId !== userId,

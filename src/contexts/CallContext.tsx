@@ -65,8 +65,17 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       { urls: "stun:stun1.l.google.com:19302" },
       { urls: "stun:stun2.l.google.com:19302" },
       { urls: "stun:stun3.l.google.com:19302" },
-      // Note: For production, a TURN server (e.g. Twilio, Metered.ca) is strongly recommended 
-      // to ensure calls work across all networks (2G, Firewalls).
+      { urls: "stun:stun.services.mozilla.com" },
+      // 100% Free TURN Relay for Mobile/Firewalls
+      {
+        urls: [
+          "turn:open-relay.metered.ca:80",
+          "turn:open-relay.metered.ca:443",
+          "turn:open-relay.metered.ca:443?transport=tcp"
+        ],
+        username: "openrelayproject",
+        credential: "openrelayproject",
+      },
     ],
     iceCandidatePoolSize: 10,
   };
@@ -459,6 +468,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: incomingCall.callerName,
         conversationId: incomingCall.conversationId,
       });
+
+      // Mobile Audio Fix: iOS/Android require interactive play()
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.play().catch(e => console.log("Audio play deferred:", e));
+      }
+
       setIncomingCall(null);
     } catch (err) {
       console.error("Failed to accept call", err);
