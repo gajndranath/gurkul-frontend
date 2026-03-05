@@ -17,9 +17,13 @@ const updateSW = registerSW({
     if (registration) {
       console.log("[Main] Unified Service Worker registered:", registration);
       try {
-        const token = await requestForToken(registration);
-        if (token) {
-          console.log("[Main] FCM Token:", token);
+        if (Notification.permission === "granted") {
+          const token = await requestForToken(registration);
+          if (token) {
+            console.log("[Main] FCM Token:", token);
+          }
+        } else {
+          console.log("[Main] Skipping FCM token request: Permission is", Notification.permission);
         }
       } catch (err) {
         console.error("[Main] FCM Token request failed:", err);

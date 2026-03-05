@@ -18,7 +18,9 @@ import {
   Star,
   Mail,
   Phone,
-  MessageSquare
+  MessageSquare,
+  Linkedin,
+  Instagram
 } from "lucide-react";
 
 import SEO from "@/components/SEO";
@@ -209,8 +211,8 @@ export const LandingPage = () => {
                     <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Workstations</p>
                 </div>
                 <div>
-                    <p className="text-3xl font-black italic">300</p>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Mbps Speed</p>
+                    <p className="text-3xl font-black italic">FREE</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">High-Speed WiFi</p>
                 </div>
             </div>
           </div>
@@ -257,7 +259,7 @@ export const LandingPage = () => {
                 <div className="absolute inset-0 bg-blue-900/10 group-hover:bg-transparent transition-colors duration-1000" />
                 <div className="absolute bottom-10 left-10 p-6 bg-white/95 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl max-w-xs transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-700">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-2">Main Registry</p>
-                    <p className="text-sm font-bold text-slate-800 leading-tight">Biometric access control ensures full security for all members.</p>
+                    <p className="text-sm font-bold text-slate-800 leading-tight">Secure gated environment ensures full peace of mind for all members.</p>
                 </div>
              </div>
              
@@ -337,13 +339,13 @@ export const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <DarkFeatureCard 
               icon={<Wifi />}
-              title="300Mbps Fiber"
-              description="Dedicated bandwidth with zero buffering for research, coding, and heavy downloads."
+              title="Free WiFi"
+              description="High-speed dedicated bandwidth with zero buffering for research and coding."
             />
             <DarkFeatureCard 
               icon={<Wind />}
-              title="Climate Ctrl."
-              description="Surgical-grade air filtration and 22°C constant cooling for maximum comfort."
+              title="Full AC"
+              description="High-performance air conditioning and 22°C constant cooling for maximum comfort."
             />
             <DarkFeatureCard 
               icon={<Clock />}
@@ -352,8 +354,8 @@ export const LandingPage = () => {
             />
             <DarkFeatureCard 
               icon={<Coffee />}
-              title="Nitro Brew"
-              description="Unlimited premium coffee & tea to fuel those late-night grind sessions."
+              title="Water Cooler"
+              description="Pure RO drinking water available 24/7 to keep you hydrated and focused."
             />
             <DarkFeatureCard 
               icon={<MapPin />}
@@ -413,15 +415,16 @@ export const LandingPage = () => {
                     />
                 </div>
 
-                <div className="md:col-span-5 rounded-[48px] overflow-hidden relative group border border-slate-100 shadow-xl">
-                    <img 
-                        src="https://lh3.googleusercontent.com/p/AF1QipMnuF5x23Latn3DMpL62kdBKIuj1N2TvBiTRbVv=s1360-w1360-h1020-rw" 
-                        alt="Gurukul Elite Seats" 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                    />
-                </div>
+                      {/* Final Gallery Slot Fix */}
+                      <div className="md:col-span-3 rounded-[48px] overflow-hidden relative group border border-slate-100 shadow-xl">
+                        <img 
+                            src="https://lh3.googleusercontent.com/p/AF1QipMnuF5x23Latn3DMpL62kdBKIuj1N2TvBiTRbVv=s1360-w1360-h1020-rw" 
+                            alt="The Infrastructure" 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                        />
+                      </div>
 
-                <div className="md:col-span-3 rounded-[48px] bg-blue-600 flex flex-col items-center justify-center p-8 text-center group transition-all hover:bg-blue-700 shadow-2xl shadow-blue-200">
+                <div className="md:col-span-4 rounded-[48px] bg-blue-600 flex flex-col items-center justify-center p-8 text-center group transition-all hover:bg-blue-700 shadow-2xl shadow-blue-200">
                      <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform">
                         <BookOpen size={32} />
                      </div>
@@ -585,7 +588,7 @@ export const LandingPage = () => {
                 {[
                     { q: "Is there a trial period?", a: "Yes, we offer a 1-day free experience pass for all new prospective members. Visit us with your ID." },
                     { q: "Can I switch my slot timing?", a: "Absolutory. You can change your preferred study slot anytime via the Student Portal based on availability." },
-                    { q: "What security measures are in place?", a: "We have 24/7 CCTV surveillance, biometric entry, and dedicated security personnel on-site." },
+                    { q: "What security measures are in place?", a: "We have 24/7 CCTV surveillance, on-site staff, and restricted entry to ensure student safety." },
                     { q: "Is technical support available?", a: "Yes, our on-site admins assist with network connectivity and hardware troubleshooting 24/7." }
                 ].map((faq, idx) => (
                     <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-hidden transition-all duration-300">
@@ -730,15 +733,12 @@ export const LandingPage = () => {
                     The ultimate learning sanctuary for dedicated students and future leaders.
                 </p>
                 <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
-                        <span className="font-black italic">T</span>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
-                        <span className="font-black italic">I</span>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
-                        <span className="font-black italic">Y</span>
-                    </div>
+                    <a href="https://www.linkedin.com/in/gajndra/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
+                        <Linkedin size={18} />
+                    </a>
+                    <a href="https://www.instagram.com/_.gajndra._" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-pink-600 hover:text-white transition-all cursor-pointer">
+                        <Instagram size={18} />
+                    </a>
                 </div>
             </div>
             
@@ -770,10 +770,19 @@ export const LandingPage = () => {
             </div>
           </div>
           
-          <div className="pt-12 text-center sm:text-left">
+          <div className="pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-              © MMRXXVI GURUKUL SELF STUDY CENTER SYSTEM INFRASTRUCTURE. OPERATIONAL GLOBALLY.
+              © 2026 GURUKUL SELF STUDY CENTER. ALL RIGHTS RESERVED.
             </p>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em]">
+                <span className="text-slate-400">System Designed by</span>
+                <a 
+                    href="/gajendra-nath-tripathi" 
+                    className="text-blue-600 hover:underline decoration-2 underline-offset-4"
+                >
+                    Gajendra Nath Tripathi
+                </a>
+            </div>
           </div>
         </div>
       </footer>

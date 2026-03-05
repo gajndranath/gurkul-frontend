@@ -162,6 +162,10 @@ const NotFoundPage = lazy(
   () => import("../features/error/NotFoundPage"),
 );
 
+const DeveloperPage = lazy(
+  () => import("../features/developer/DeveloperPage"),
+);
+
 const routes: RouteObject[] = [
   {
     path: "/",
@@ -171,6 +175,14 @@ const routes: RouteObject[] = [
           <LandingPage />
         </Suspense>
       </PublicRoute>
+    ),
+  },
+  {
+    path: "/gajendra-nath-tripathi",
+    element: (
+      <Suspense fallback={<Loader />}>
+        <DeveloperPage />
+      </Suspense>
     ),
   },
   {

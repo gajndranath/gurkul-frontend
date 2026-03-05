@@ -18,6 +18,13 @@ export const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
 export const requestForToken = async (serviceWorkerRegistration?: ServiceWorkerRegistration) => {
+  if (typeof window !== "undefined" && "Notification" in window) {
+    if (Notification.permission === "denied") {
+      console.warn("[Firebase] Permission denied. Skipping token request.");
+      return null;
+    }
+  }
+
   const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
   console.log("[Firebase] requestForToken called with VAPID:", vapidKey ? vapidKey.substring(0, 10) + "..." : "MISSING");
 
