@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,10 +22,48 @@ import {
 } from "lucide-react";
 
 import SEO from "@/components/SEO";
+import heroImg from "@/assets/img1.jpeg";
+import galleryImg from "@/assets/img3.jpeg";
 
 export const LandingPage = () => {
   const navigate = useNavigate();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    // Map placeholder or similar to field names if IDs aren't present
+    const fieldName = e.target.getAttribute('name') || id;
+    setFormData(prev => ({ ...prev, [fieldName]: value }));
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.post("/api/v1/public/contact", formData);
+      if (response.data.success) {
+        toast.success("Transmission Received", {
+          description: "Our operations team will respond shortly."
+        });
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      }
+    } catch (error: any) {
+      toast.error("Transmission Failed", {
+        description: error.response?.data?.message || "Please check your terminal connection and try again."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleLogin = () => {
     navigate("/student/login");
@@ -32,10 +72,65 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900 scroll-smooth">
       <SEO 
-        title="Gurukul Self Study Centre | Best Library in Varanasi & Sarnath"
-        description="Join Gurukul Self Study Centre, the top-rated digital library in Varanasi and Sarnath. We provide a peaceful, high-tech study environment with 300Mbps internet, AC, and ergonomic seating."
-        keywords="Gurukul Self Study Centre, Best Library in Varanasi, Library in Sarnath, Digital Library Varanasi, Study Center Varanasi, Student Library Sarnath, Top Rated Library Varanasi"
+        title="Gurukul Self Study Center | Best Library in Sarnath & Varanasi"
+        description="Gurukul Self Study Center is the most peaceful digital library in Sarnath, Varanasi. 24/7 access, green environment near Shakti Pith, 300Mbps internet, and AC."
+        keywords="Gurukul Self Study Center, Best Library in Varanasi, Library in Sarnath, Digital Library Varanasi, Study Center Varanasi, Student Library Sarnath, Library Baraipur, Library near Shakti Pith"
       />
+      {/* JSON-LD Schema for Local Business and Reviews */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Library",
+          "name": "Gurukul Self Study Center",
+          "description": "Premium digital library and study center in Sarnath, Varanasi. High-speed WiFi, AC, and a peaceful green environment.",
+          "url": "https://www.gurukulselfstudycentre.in",
+          "telephone": "088586 36097",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "sa 14/53 s 17 shaktipeeth, Baraipur, Sarnath",
+            "addressLocality": "Varanasi",
+            "addressRegion": "UP",
+            "postalCode": "221007",
+            "addressCountry": "IN"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+              "opens": "06:00",
+              "closes": "21:00"
+            }
+          ],
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "reviewCount": "47"
+          },
+          "review": [
+            {
+              "@type": "Review",
+              "author": "Santosh Kumar Chaudhary",
+              "reviewBody": "Books are the best weapon in the world, and Librarians are almost always very helpful and knowledgeable.",
+              "reviewRating": { "@type": "Rating", "ratingValue": "5" }
+            },
+            {
+              "@type": "Review",
+              "author": "Tejoo singh prajapati",
+              "reviewBody": "Very peaceful center of knowledge. This is the place where you meditate. Situated in Shakti pith khetre, surrounding is very green.",
+              "reviewRating": { "@type": "Rating", "ratingValue": "5" }
+            }
+          ],
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Digital Member Services",
+            "itemListElement": [
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Digital Payment Tracking" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Community Knowledge Chat" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "P2P Resource Sharing" } }
+            ]
+          }
+        })}
+      </script>
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -44,16 +139,15 @@ export const LandingPage = () => {
               <BookOpen className="text-white" size={24} />
             </div>
             <span className="text-xl font-black tracking-tighter uppercase italic">
-              Gurukul<span className="text-blue-600">Sync</span>
+              Gurukul<span className="text-blue-600"> Center</span>
             </span>
           </div>
           
           <div className="hidden lg:flex items-center gap-8">
-            <a href="#about" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">About</a>
-            <a href="#features" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Features</a>
-            <a href="#gallery" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Gallery</a>
-            <a href="#pricing" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Plans</a>
-            <a href="#contact" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Contact</a>
+            <a href="#about" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">The Center</a>
+            <a href="#features" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Facilities</a>
+            <a href="#gallery" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">The Space</a>
+            <a href="#contact" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Reach Us</a>
             <Button 
                 onClick={handleLogin}
                 className="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] h-11 px-8 rounded-xl shadow-lg shadow-slate-200"
@@ -77,14 +171,14 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em]">Premium Learning Space</span>
+               <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sarnath's Premium Study Hub</span>
             </div>
             <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-slate-900 leading-[0.85] uppercase italic">
-              Focus is <br />
-              <span className="text-blue-600 underline decoration-slate-100 underline-offset-8">Power.</span>
+              Knowledge & <br />
+              <span className="text-blue-600 underline decoration-slate-100 underline-offset-8">Peace.</span>
             </h1>
             <p className="text-lg text-slate-500 font-medium max-w-lg leading-relaxed">
-              Experience the pinnacle of academic environments. High-performance facilities for students who demand the best from their study time.
+              Experience a unique, meditative study environment at Shakti Pith, Sarnath. Surrounded by nature, amplified by our <strong>Digital Student App</strong> for seamless learning.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button 
@@ -126,8 +220,8 @@ export const LandingPage = () => {
             <div className="relative bg-white border border-slate-100 rounded-[48px] overflow-hidden shadow-2xl p-4">
                 <div className="bg-slate-50 rounded-[32px] aspect-[4/3] flex items-center justify-center relative overflow-hidden">
                     <img 
-                        src="/C:/Users/gajen/.gemini/antigravity/brain/e27d1527-cc10-4be4-bd25-5d56d31bab9b/modern_library_about_1772190524436.png" 
-                        alt="Library Interior" 
+                        src={heroImg} 
+                        alt="Gurukul Main Study Hall" 
                         className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-1000"
                     />
                     <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 to-transparent" />
@@ -156,8 +250,8 @@ export const LandingPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-32">
              <div className="order-2 lg:order-1 relative h-[600px] rounded-[64px] overflow-hidden border border-slate-100 shadow-2xl group">
                 <img 
-                    src="/C:/Users/gajen/.gemini/antigravity/brain/e27d1527-cc10-4be4-bd25-5d56d31bab9b/library_entrance_facade_1772190582462.png" 
-                    alt="Our Premise" 
+                    src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwer7ft7LwB5pJ4Mq_t4nxNbfJef8LHIi_ub45LbzR4IwHIfdwdiwk_xDdm6MCeiVBSnWmtQ-QzEz8ZZAoNVDbMtOrDllauKjChk2bOK6_r-6jsspSA2GpoiwizXRJUdPcRF5re6_kQ=s1360-w1360-h1020-rw" 
+                    alt="Gurukul Sanctuary Entrance" 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[3s]"
                 />
                 <div className="absolute inset-0 bg-blue-900/10 group-hover:bg-transparent transition-colors duration-1000" />
@@ -170,20 +264,20 @@ export const LandingPage = () => {
              <div className="order-1 lg:order-2 space-y-10">
                 <div className="space-y-4">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 rounded-lg">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white italic">The Vision</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white italic">The Sanctuary</span>
                     </div>
                     <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic leading-[0.9] translate-x-[-4px]">
-                       Sanctuary for <br />
-                       <span className="text-blue-600 underline underline-offset-8 decoration-slate-200">The Driven.</span>
+                       Study in <br />
+                       <span className="text-blue-600 underline underline-offset-8 decoration-slate-200">Nature.</span>
                     </h2>
                 </div>
                 
                 <div className="space-y-6 text-slate-500 font-medium leading-relaxed max-w-xl text-lg">
                     <p>
-                        Gurukul Self Study Centre was established with a singular mission: to eliminate the friction between a student and their potential. We've optimized every square inch for cognitive peak performance.
+                        Gurukul Self Study Center is situated in the sacred Shakti Pith area of Sarnath. We believe that true learning requires a peaceful heart and a quiet environment.
                     </p>
                     <p>
-                        Our space is more than just a library; it's a productivity machine. From ergonomic seating that supports 12-hour grinds to acoustic management that eliminates distractions, we've built the ultimate terminal for academic success.
+                        Our sanctuary is amplified by the <strong>Gurukul Digital Hub</strong>—an exclusive app for members to track fees, chat with peers, and share knowledge resources.
                     </p>
                 </div>
                 
@@ -292,8 +386,8 @@ export const LandingPage = () => {
              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[300px]">
                 <div className="md:col-span-8 rounded-[48px] overflow-hidden relative group border border-slate-100 shadow-xl">
                     <img 
-                        src="/C:/Users/gajen/.gemini/antigravity/brain/e27d1527-cc10-4be4-bd25-5d56d31bab9b/library_gallery_1_study_zone_1772190541234.png" 
-                        alt="Study Zone" 
+                        src={galleryImg}
+                        alt="The Silent Core Aisles" 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                     />
                     <div className="absolute inset-0 bg-blue-900/10 group-hover:bg-transparent transition-colors" />
@@ -304,8 +398,8 @@ export const LandingPage = () => {
 
                 <div className="md:col-span-4 rounded-[48px] overflow-hidden relative group border border-slate-100 shadow-xl">
                     <img 
-                        src="/C:/Users/gajen/.gemini/antigravity/brain/e27d1527-cc10-4be4-bd25-5d56d31bab9b/library_gallery_study_booth_closeup_1772216475388.png" 
-                        alt="Study Booth" 
+                        src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwerrv7KrKoJUFwXvJkcmv-fEswzACumNugpuht3uCsCQdE3AMM0dQIWXHR_nS2G31muUgYqbmJdqGaTc_AGJjvw6ge_Tkaw-F_RHEs8IVJcIuoCuCBCLH7w68oFul7DcxCM3wiQ=s1360-w1360-h1020-rw" 
+                        alt="Premium Study Stations" 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                     <div className="absolute inset-0 bg-blue-900/10 group-hover:bg-transparent transition-colors" />
@@ -313,16 +407,16 @@ export const LandingPage = () => {
 
                 <div className="md:col-span-4 rounded-[48px] overflow-hidden relative group border border-slate-100 shadow-xl">
                     <img 
-                        src="/C:/Users/gajen/.gemini/antigravity/brain/e27d1527-cc10-4be4-bd25-5d56d31bab9b/library_gallery_discussion_room_1772216445397.png" 
-                        alt="Discussion Room" 
+                        src="https://lh3.googleusercontent.com/gps-cs-s/AHVAweo0rfiCRf86IjonIY3vE07r4ZlsXVvBx8s5cWTlqpE1nGfqWcIE5ONZCZ0eUK_XWFENv8gXRGZYmSg57iuVVPdaMRSj0Pjr3H1p0zMD64EegaI1pipp1717K6Pz_DqUTorcU-3Sow=s1360-w1360-h1020-rw" 
+                        alt="Infrastructure of Success" 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                 </div>
 
                 <div className="md:col-span-5 rounded-[48px] overflow-hidden relative group border border-slate-100 shadow-xl">
                     <img 
-                        src="/C:/Users/gajen/.gemini/antigravity/brain/e27d1527-cc10-4be4-bd25-5d56d31bab9b/library_gallery_coffee_bar_1772216459559.png" 
-                        alt="Refreshment Hub" 
+                        src="https://lh3.googleusercontent.com/p/AF1QipMnuF5x23Latn3DMpL62kdBKIuj1N2TvBiTRbVv=s1360-w1360-h1020-rw" 
+                        alt="Gurukul Elite Seats" 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                 </div>
@@ -343,6 +437,89 @@ export const LandingPage = () => {
         </div>
       </section>
 
+      {/* Digital Sanctuary Section */}
+      <section className="py-32 bg-slate-900 border-y border-white/5 relative overflow-hidden text-left">
+        <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent opacity-50" />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+                <div className="space-y-10">
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 rounded-lg text-left">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white italic">The Hybrid Ecosystem</span>
+                        </div>
+                        <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic leading-[0.9] text-white">
+                           Digital <br />
+                           <span className="text-blue-500 underline underline-offset-8 decoration-white/10">Sanctuary.</span>
+                        </h2>
+                    </div>
+
+                    <div className="space-y-8">
+                        {[
+                            { 
+                                title: "Financial Terminal", 
+                                desc: "Track your membership, view payment history, and receive automated fee reminders directly on your mobile terminal.",
+                                icon: <Star className="text-blue-500" size={20} />
+                            },
+                            { 
+                                title: "Knowledge Nexus", 
+                                desc: "Exclusive community chat for Gurukul scholars. Share book summaries, study strategies, and academic breakthroughs in real-time.",
+                                icon: <MessageSquare className="text-blue-500" size={20} />
+                            },
+                            { 
+                                title: "Resource Vault", 
+                                desc: "P2P Knowledge Sharing: Direct access to PDFs, sample papers, and competitive notes shared by your fellow high-achievers.",
+                                icon: <BookOpen className="text-blue-500" size={20} />
+                            }
+                        ].map((feature, i) => (
+                            <div key={i} className="flex gap-6 group">
+                                <div className="mt-1 w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:bg-blue-600 group-hover:border-blue-500 transition-all duration-500">
+                                    {feature.icon}
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-lg font-black uppercase italic text-white">{feature.title}</h4>
+                                    <p className="text-slate-400 font-medium leading-relaxed max-w-md">{feature.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <div className="absolute -inset-1 bg-blue-500 rounded-[48px] blur-2xl opacity-20 animate-pulse" />
+                    <div className="relative bg-slate-800 border border-white/10 rounded-[48px] p-8 shadow-2xl">
+                         <div className="aspect-[9/16] bg-slate-900 rounded-[32px] overflow-hidden border border-white/5 relative">
+                             {/* Abstract Phone UI representation */}
+                             <div className="absolute top-0 left-0 right-0 h-16 bg-slate-800/80 backdrop-blur-md flex items-center justify-between px-6 z-10">
+                                 <span className="text-[8px] font-black text-slate-400">GURUKUL HUB v2.0</span>
+                                 <div className="w-2 h-2 rounded-full bg-green-500" />
+                             </div>
+                             <div className="p-8 pt-24 space-y-8">
+                                 <div className="h-32 bg-white/5 rounded-2xl border border-white/5 p-4 space-y-3">
+                                     <div className="w-1/2 h-2 bg-blue-600/40 rounded-full" />
+                                     <div className="w-full h-8 bg-blue-600 rounded-xl" />
+                                     <div className="w-2/3 h-2 bg-white/5 rounded-full" />
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-4">
+                                     <div className="h-24 bg-white/5 rounded-2xl border border-white/5" />
+                                     <div className="h-24 bg-white/5 rounded-2xl border border-white/5" />
+                                 </div>
+                                 <div className="h-40 bg-white/5 rounded-2xl border border-white/5 p-4 flex flex-col justify-end gap-2">
+                                     <div className="w-8 h-8 rounded-full bg-blue-600" />
+                                     <div className="w-3/4 h-2 bg-white/10 rounded-full" />
+                                     <div className="w-1/2 h-2 bg-white/5 rounded-full" />
+                                 </div>
+                             </div>
+                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-12 h-1 bg-white/10 rounded-full" />
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section className="py-24 bg-slate-50 px-6 overflow-hidden">
         <div className="max-w-7xl mx-auto">
@@ -350,70 +527,52 @@ export const LandingPage = () => {
                 <div className="lg:w-1/3 space-y-6">
                     <div className="w-16 h-1 bg-blue-600" />
                     <h2 className="text-5xl font-black tracking-tighter uppercase italic leading-tight">
-                        What Our <br /><span className="text-blue-600">Comrades Say.</span>
+                        What Our <br /><span className="text-blue-600">Students Say.</span>
                     </h2>
-                    <p className="text-slate-500 font-medium">Join 500+ students who transformed their grades at Gurukul Self Study Centre.</p>
+                    <p className="text-slate-500 font-medium">Over 4.8 stars from 47+ real student reviews on Google.</p>
                 </div>
                 
-                <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <TestimonialCard 
-                        name="Aryan Sharma"
-                        role="JEE Aspirant"
-                        quote="The silence here is therapeutic. I cleared my concepts twice as fast as I did at home. Truly a heaven for focused study."
+                        name="Santosh Kumar Chaudhary"
+                        role="Local Guide · 19 reviews"
+                        quote="Books are the best weapon in the world, and Librarians are almost always very helpful and knowledgeable. Their skills are probably very helpful."
                     />
                     <TestimonialCard 
-                        name="Isha Gupta"
-                        role="CA Student"
-                        quote="300Mbps internet and the most comfortable chairs I've ever used. The cafe zone is perfect for short breaks."
+                        name="Yadav suraj"
+                        role="Local Guide · 38 reviews"
+                        quote="Library is quite good at affordable price... If u failed in life need some success with motivation then u should definitely give urself a chance."
                     />
                     <TestimonialCard 
-                        name="Devansh Verma"
-                        role="Medical Student"
-                        quote="I used to struggle with consistency. Being surrounded by other driven students at Gurukul Self Study Centre changed my mindset completely."
+                        name="Tejoo singh prajapati"
+                        role="1 review"
+                        quote="Very peaceful center of knowledge. This is the place where you meditate. It is situated in Shakti pith khetre. Its surrounding is very green."
                     />
                     <TestimonialCard 
-                        name="Sneha Kapoor"
-                        role="UPSC Aspirant"
-                        quote="The private cabins are a game changer. Being able to leave my books in a secure locker is so convenient."
+                        name="Alok Mishra"
+                        role="3 reviews"
+                        quote="Good environment peaceful area good WiFi service and support by library staff provide news paper and masik Hindi patrika to every month."
+                    />
+                    <TestimonialCard 
+                        name="Rahul Maurya"
+                        role="2 reviews"
+                        quote="Bahut hi sundar environment for study. Best facility provided by owner. Everything is best."
+                    />
+                    <TestimonialCard 
+                        name="rajesh pal"
+                        role="1 review"
+                        quote="Good service and best educational environment in affordable price 600 rs per month 24/7."
+                    />
+                    <TestimonialCard 
+                        name="prashant rohilla"
+                        role="1 review"
+                        quote="Varanasi best library 600 rs 24/7 with fully air conditioning and Peace environment."
                     />
                 </div>
             </div>
         </div>
       </section>
 
-      {/* Pricing / Membership */}
-      <section id="pricing" className="py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-24 space-y-4">
-                <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
-                    Pricing <span className="text-blue-600">Model.</span>
-                </h2>
-                <p className="text-slate-500 font-medium">Premium amenities, accessible pricing.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <PricingCard 
-                    tier="Standard"
-                    price="1,200"
-                    period="Month"
-                    features={["Non-AC Zone Access", "High Speed Wi-Fi", "Common Charging", "Mobile Desk App"]}
-                />
-                <PricingCard 
-                    tier="Premium"
-                    price="1,800"
-                    period="Month"
-                    featured
-                    features={["Full AC Quiet Zone", "Dedicated Workstation", "Lockable Cabinets", "Unlimited Coffee", "Priority Booking"]}
-                />
-                <PricingCard 
-                    tier="Elite"
-                    price="2,500"
-                    period="Month"
-                    features={["Private VIP Cabin", "24/7 Unlimited Access", "Personal Storage", "Meal Discounts", "Resource Suite"]}
-                />
-            </div>
-        </div>
-      </section>
 
       {/* FAQ Section */}
       <section className="py-32 bg-slate-50 px-6">
@@ -465,7 +624,7 @@ export const LandingPage = () => {
                             </div>
                             <div>
                                 <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Protocol Email</p>
-                                <p className="text-white font-bold tracking-tight">ops@libsync.com</p>
+                                <p className="text-white font-bold tracking-tight">ops@gurukulselfstudycentre.in</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-6 group cursor-pointer">
@@ -474,7 +633,7 @@ export const LandingPage = () => {
                             </div>
                             <div>
                                 <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Voice Terminal</p>
-                                <p className="text-white font-bold tracking-tight">+91 987 654 3210</p>
+                                <p className="text-white font-bold tracking-tight">088586 36097</p>
                             </div>
                         </div>
                      </div>
@@ -484,33 +643,69 @@ export const LandingPage = () => {
                             <MapPin className="text-blue-500 group-hover:scale-110 transition-transform" />
                         </div>
                         <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-2">Location Node</p>
-                        <p className="text-white text-lg font-black uppercase italic italic">Main St. Education Hub, <br />Global City, IN 40001</p>
-                        <a href="#" className="inline-block mt-4 text-[10px] font-black uppercase text-blue-500 border-b border-blue-500/30 pb-0.5 hover:border-blue-500 transition-colors">Launch Directions</a>
+                        <p className="text-white text-lg font-black uppercase italic leading-snug">sa 14/53 s 17 shaktipeeth, <br />Baraipur, Sarnath, Varanasi 221007</p>
+                        <div className="mt-4 space-y-1">
+                            <p className="text-[10px] font-black uppercase text-blue-500">Open: 6 AM – 9 PM (Every Day)</p>
+                            <a href="https://www.google.com/maps/search/?api=1&query=Gurukul+Self+Study+Center+sa+14/53+s+17+shaktipeeth+Baraipur+Sarnath+Varanasi" target="_blank" rel="noopener noreferrer" className="inline-block text-[10px] font-black uppercase text-white border-b border-white/30 pb-0.5 hover:border-white transition-colors">Launch Directions</a>
+                        </div>
                      </div>
                 </div>
                 
                 <div className="lg:w-1/2 bg-white p-12 lg:p-20">
-                     <form className="space-y-6">
+                     <form className="space-y-6" onSubmit={handleContactSubmit}>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identiy</label>
-                                <Input placeholder="Full Name" className="h-14 bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600" />
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identity</label>
+                                <Input 
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    placeholder="Full Name" 
+                                    required
+                                    className="h-14 bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600" 
+                                />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Address</label>
-                                <Input placeholder="Email Address" className="h-14 bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600" />
+                                <Input 
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    placeholder="Email Address" 
+                                    required
+                                    className="h-14 bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600" 
+                                />
                             </div>
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Subject</label>
-                            <Input placeholder="What is it about?" className="h-14 bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600" />
+                            <Input 
+                                name="subject"
+                                value={formData.subject}
+                                onChange={handleInputChange}
+                                placeholder="What is it about?" 
+                                required
+                                className="h-14 bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600" 
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Transmission Payload</label>
-                            <Textarea placeholder="Type your message here..." className="min-h-[160px] bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600 p-6 resize-none" />
+                            <Textarea 
+                                name="message"
+                                value={formData.message}
+                                onChange={handleInputChange}
+                                placeholder="Type your message here..." 
+                                required
+                                className="min-h-[160px] bg-slate-50 border-transparent rounded-2xl font-bold focus-visible:ring-blue-600 p-6 resize-none" 
+                            />
                         </div>
-                        <Button className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest italic rounded-[24px] shadow-xl shadow-blue-100">
-                           Submit Transmission
+                        <Button 
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest italic rounded-[24px] shadow-xl shadow-blue-100 disabled:opacity-50"
+                        >
+                            {isSubmitting ? "Transmitting..." : "Submit Transmission"}
                         </Button>
                      </form>
                 </div>
@@ -528,7 +723,7 @@ export const LandingPage = () => {
                     <BookOpen className="text-white" size={24} />
                     </div>
                     <span className="text-xl font-black tracking-tighter uppercase italic">
-                    Gurukul<span className="text-blue-600">Sync</span>
+                    Gurukul<span className="text-blue-600"> Center</span>
                     </span>
                 </div>
                 <p className="text-slate-400 text-sm font-medium leading-relaxed">
@@ -553,7 +748,6 @@ export const LandingPage = () => {
                     <ul className="space-y-4 text-[11px] font-black uppercase tracking-tight text-slate-500">
                         <li><a href="#about" className="hover:text-blue-600 transition-colors">The Space</a></li>
                         <li><a href="#features" className="hover:text-blue-600 transition-colors">Technology</a></li>
-                        <li><a href="#pricing" className="hover:text-blue-600 transition-colors">Pricing</a></li>
                         <li><a href="#gallery" className="hover:text-blue-600 transition-colors">Gallery</a></li>
                     </ul>
                 </div>
@@ -578,7 +772,7 @@ export const LandingPage = () => {
           
           <div className="pt-12 text-center sm:text-left">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-              © MMRXXVI GURUKUL SELF STUDY CENTRE SYSTEM INFRASTRUCTURE. OPERATIONAL GLOBALLY.
+              © MMRXXVI GURUKUL SELF STUDY CENTER SYSTEM INFRASTRUCTURE. OPERATIONAL GLOBALLY.
             </p>
           </div>
         </div>
@@ -617,41 +811,5 @@ const TestimonialCard = ({ name, role, quote }: { name: string, role: string, qu
     </div>
 );
 
-const PricingCard = ({ tier, price, period, features, featured = false }: { tier: string, price: string, period: string, features: string[], featured?: boolean }) => (
-    <div className={`
-        p-12 rounded-[48px] border transition-all duration-500 relative flex flex-col h-full
-        ${featured ? "bg-slate-900 border-slate-900 text-white shadow-2xl scale-105 z-10 lg:translate-y-[-10px]" : "bg-white border-slate-100 text-slate-900 hover:border-blue-100"}
-    `}>
-        {featured && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full shadow-xl">
-                Most Popular
-            </div>
-        )}
-        <div className="mb-10">
-            <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-4 text-blue-500">{tier}</h3>
-            <div className="flex items-baseline gap-1">
-                <span className="text-xl font-bold italic">₹</span>
-                <span className="text-6xl font-black tracking-tighter italic">{price}</span>
-                <span className={`text-[10px] font-black uppercase tracking-widest ml-1 ${featured ? "text-slate-500" : "text-slate-400"}`}>/ {period}</span>
-            </div>
-        </div>
-        
-        <div className="space-y-4 mb-12 flex-1">
-            {features.map((f) => (
-                <div key={f} className="flex items-center gap-3">
-                    <CheckCircle2 size={16} className={featured ? "text-blue-500" : "text-blue-600"} />
-                    <span className={`text-[11px] font-bold uppercase tracking-tight italic ${featured ? "text-slate-300" : "text-slate-500"}`}>{f}</span>
-                </div>
-            ))}
-        </div>
-        
-        <Button className={`
-            w-full h-16 rounded-[24px] font-black uppercase tracking-widest italic
-            ${featured ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-slate-50 hover:bg-slate-100 text-slate-900"}
-        `}>
-            Secure Pass
-        </Button>
-    </div>
-);
 
 export default LandingPage;

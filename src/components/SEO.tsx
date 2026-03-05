@@ -11,9 +11,9 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-  title = 'Gurukul Self Study Centre | Best Library in Varanasi & Sarnath',
-  description = 'Join Gurukul Self Study Centre, the best library in Varanasi and Sarnath. Our digital library offers a peaceful study environment, high-speed internet, and comfortable seating for students.',
-  keywords = 'Gurukul Self Study Centre, Library in Varanasi, Best Library in Sarnath, Digital Library Varanasi, Study Center Varanasi, Student Library Sarnath',
+  title = 'Gurukul Self Study Center | Smart Library & Digital Hub in Varanasi',
+  description = 'Gurukul Self Study Center in Sarnath, Varanasi. A hybrid study sanctuary offering a peaceful green environment, 24/7 access, and a digital member app for payments, community chat, and PDF sharing.',
+  keywords = 'Gurukul Self Study Center, Library in Varanasi, Digital Library Varanasi, Smart Library App, Sarnath Study Hub, Library for Students Varanasi, Student Community Chat, PDF Sharing Library, Payment Tracking Library, Best Library Sarnath, Shakti Pith Library',
   canonical = 'https://www.gurukulselfstudycentre.in',
   ogType = 'website',
   ogImage = '/og-image.jpg',
