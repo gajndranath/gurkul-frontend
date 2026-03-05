@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /admin/*
 
-Sitemap: https://gurukulselfstudycentre.com/sitemap.xml
+Sitemap: https://www.gurukulselfstudycentre.in/sitemap.xml

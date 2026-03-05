@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const SITE_URL = 'https://gurukulselfstudycentre.com'; // Updated domain
+const SITE_URL = 'https://www.gurukulselfstudycentre.in'; // Corrected to .in with www as per Search Console
 
 const routes = [
   { url: '/', changefreq: 'daily', priority: 1.0 },
