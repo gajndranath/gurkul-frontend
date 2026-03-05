@@ -21,14 +21,8 @@ export const useFcm = () => {
         try {
             console.log("[FCM] Starting initFcm for role:", role);
             
-            // Register SW if not already
-            await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
-              scope: "/"
-            });
-            
-            // ✅ CRITICAL: Wait for the Service Worker to be fully active
-            // This prevents "AbortError: Subscription failed - no active Service Worker"
-            console.log("[FCM] Waiting for Service Worker to be ready...");
+            // Register SW if not already (this will pick up the one from PWA/sw.ts)
+            console.log("[FCM] Waiting for PWA Service Worker to be ready...");
             const registration = await navigator.serviceWorker.ready;
             console.log("[FCM] Service Worker READY. Status:", registration.active?.state);
             

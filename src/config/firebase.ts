@@ -18,23 +18,37 @@ export const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
 export const requestForToken = async (serviceWorkerRegistration?: ServiceWorkerRegistration) => {
-  try {
-    const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-    console.log("[Firebase] requestForToken called with VAPID:", vapidKey ? vapidKey.substring(0, 10) + "..." : "MISSING");
-    
-    const currentToken = await getToken(messaging, {
+  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  console.log("[Firebase] requestForToken called with VAPID:", vapidKey ? vapidKey.substring(0, 10) + "..." : "MISSING");
+
+  const fetchToken = async () => {
+    return await getToken(messaging, {
       vapidKey: vapidKey || "YOUR_VAPID_KEY",
       serviceWorkerRegistration,
     });
+  };
+
+  try {
+    let currentToken = await fetchToken();
     
     if (currentToken) {
-      console.log("[Firebase] Token retrieved from Google:", currentToken.substring(0, 10) + "...");
+      console.log("[Firebase] Token retrieved successfully.");
       return currentToken;
     } else {
       console.log("[Firebase] No token available. User needs to re-grant permission.");
       return null;
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === "messaging/token-subscribe-failed" || err?.name === "InvalidStateError") {
+      console.warn("[Firebase] Retrying token fetch due to IDB/Network error...");
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const retryToken = await fetchToken();
+        return retryToken;
+      } catch (retryErr) {
+        console.error("[Firebase] Retry failed:", retryErr);
+      }
+    }
     console.error("[Firebase] getToken Error:", err);
     return null;
   }

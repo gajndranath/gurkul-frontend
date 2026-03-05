@@ -36,13 +36,17 @@ const updateSW = registerSW({
   },
 });
 
+import { HelmetProvider } from "react-helmet-async";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <SessionSyncer />
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <SessionSyncer />
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   </StrictMode>,
 );

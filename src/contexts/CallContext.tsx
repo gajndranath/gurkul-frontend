@@ -47,6 +47,9 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const isIceRestarting = useRef(false);
+  const makingOffer = useRef(false);
+  const ignoreOffer = useRef(false);
+  const isSettingRemoteAnswerPending = useRef(false);
 
   // WebRTC Refs
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -220,12 +223,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Guard: Only initiate restart if we are in 'stable' state.
     // If not stable, we might be in the middle of receiving the OTHER peer's restart.
     if (pcRef.current.signalingState !== "stable") {
-      console.log("[CallContext] Skipping ICE Restart initiation: signaling state is not stable (" + pcRef.current.signalingState + ")");
+      console.log("[CallContext] Skipping ICE Restart initiation: signaling state is " + pcRef.current.signalingState);
       return;
     }
 
     console.log("[CallContext] Initiating ICE Restart...");
     isIceRestarting.current = true;
+    makingOffer.current = true;
     try {
       const offer = await pcRef.current.createOffer({ iceRestart: true });
       offer.sdp = setOpusBitrate(offer.sdp!, 12000);
@@ -255,11 +259,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, 15000);
     } catch (err) {
       console.error("[CallContext] ICE Restart failed:", err);
-      isIceRestarting.current = false;
-      // Don't end call immediately if it's just a state error, let the other side's offer win
-      if (!(err instanceof DOMException && err.name === "InvalidStateError")) {
-          endCall();
-      }
+      // Don't reset makingOffer/isIceRestarting here if it was a glare-related state error, 
+      // let the incoming offer handler manage it.
+    } finally {
+      makingOffer.current = false;
     }
   };
 
@@ -380,15 +383,17 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!pcRef.current || !userId || !data.fromId) return;
 
       try {
-        const isPolite = userId < data.fromId; // The peer with smaller ID is "polite" and rolls back
-        const isGlare = pcRef.current.signalingState !== "stable";
+        const isPolite = userId < data.fromId; 
+        const isGlare = makingOffer.current || pcRef.current.signalingState !== "stable";
+        
+        ignoreOffer.current = !isPolite && isGlare;
+        if (ignoreOffer.current) {
+          console.warn("[CallContext] Glare detected (impolite). Ignoring remote restart offer.");
+          return;
+        }
 
         if (isGlare) {
-          if (!isPolite) {
-            console.warn("[CallContext] Glare detected. I am impolite, ignoring remote restart.");
-            return;
-          }
-          console.warn("[CallContext] Glare detected. I am polite, rolling back local offer.");
+          console.warn("[CallContext] Glare detected (polite). Rolling back local offer.");
           await pcRef.current.setLocalDescription({ type: "rollback" });
         }
 
@@ -412,16 +417,21 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     socket.on("call:ice_restart_answer", async (data: any) => {
       console.log("[CallContext] Received ICE Restart answer. Current state:", pcRef.current?.signalingState);
-      if (pcRef.current && data.answer) {
-        try {
-          if (pcRef.current.signalingState === "have-local-offer") {
-            await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
-          } else {
-            console.warn("[CallContext] Ignoring ICE restart answer (signaling state is " + pcRef.current.signalingState + ")");
-          }
-        } catch (err) {
-          console.error("[CallContext] Failed to apply ICE restart answer:", err);
+      if (!pcRef.current || !data.answer) return;
+
+      try {
+        if (pcRef.current.signalingState !== "have-local-offer") {
+            console.warn("[CallContext] Skipping ICE restart answer - signaling state is " + pcRef.current.signalingState);
+            return;
         }
+
+        isSettingRemoteAnswerPending.current = true;
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+        isSettingRemoteAnswerPending.current = false;
+        
+      } catch (err) {
+        console.error("[CallContext] Failed to apply ICE restart answer:", err);
+        isSettingRemoteAnswerPending.current = false;
       }
     });
 

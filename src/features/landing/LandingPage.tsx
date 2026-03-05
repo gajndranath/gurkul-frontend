@@ -19,6 +19,8 @@ import {
   MessageSquare
 } from "lucide-react";
 
+import SEO from "@/components/SEO";
+
 export const LandingPage = () => {
   const navigate = useNavigate();
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -29,6 +31,11 @@ export const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900 scroll-smooth">
+      <SEO 
+        title="Gurukul Self Study Centre | Best Library in Varanasi & Sarnath"
+        description="Join Gurukul Self Study Centre, the top-rated digital library in Varanasi and Sarnath. We provide a peaceful, high-tech study environment with 300Mbps internet, AC, and ergonomic seating."
+        keywords="Gurukul Self Study Centre, Best Library in Varanasi, Library in Sarnath, Digital Library Varanasi, Study Center Varanasi, Student Library Sarnath, Top Rated Library Varanasi"
+      />
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -37,7 +44,7 @@ export const LandingPage = () => {
               <BookOpen className="text-white" size={24} />
             </div>
             <span className="text-xl font-black tracking-tighter uppercase italic">
-              Lib<span className="text-blue-600">Sync</span>
+              Gurukul<span className="text-blue-600">Sync</span>
             </span>
           </div>
           
@@ -173,7 +180,7 @@ export const LandingPage = () => {
                 
                 <div className="space-y-6 text-slate-500 font-medium leading-relaxed max-w-xl text-lg">
                     <p>
-                        LibSync was established with a singular mission: to eliminate the friction between a student and their potential. We've optimized every square inch for cognitive peak performance.
+                        Gurukul Self Study Centre was established with a singular mission: to eliminate the friction between a student and their potential. We've optimized every square inch for cognitive peak performance.
                     </p>
                     <p>
                         Our space is more than just a library; it's a productivity machine. From ergonomic seating that supports 12-hour grinds to acoustic management that eliminates distractions, we've built the ultimate terminal for academic success.
@@ -345,7 +352,7 @@ export const LandingPage = () => {
                     <h2 className="text-5xl font-black tracking-tighter uppercase italic leading-tight">
                         What Our <br /><span className="text-blue-600">Comrades Say.</span>
                     </h2>
-                    <p className="text-slate-500 font-medium">Join 500+ students who transformed their grades at LibSync.</p>
+                    <p className="text-slate-500 font-medium">Join 500+ students who transformed their grades at Gurukul Self Study Centre.</p>
                 </div>
                 
                 <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -362,7 +369,7 @@ export const LandingPage = () => {
                     <TestimonialCard 
                         name="Devansh Verma"
                         role="Medical Student"
-                        quote="I used to struggle with consistency. Being surrounded by other driven students at LibSync changed my mindset completely."
+                        quote="I used to struggle with consistency. Being surrounded by other driven students at Gurukul Self Study Centre changed my mindset completely."
                     />
                     <TestimonialCard 
                         name="Sneha Kapoor"
@@ -521,7 +528,7 @@ export const LandingPage = () => {
                     <BookOpen className="text-white" size={24} />
                     </div>
                     <span className="text-xl font-black tracking-tighter uppercase italic">
-                    Lib<span className="text-blue-600">Sync</span>
+                    Gurukul<span className="text-blue-600">Sync</span>
                     </span>
                 </div>
                 <p className="text-slate-400 text-sm font-medium leading-relaxed">
@@ -571,7 +578,7 @@ export const LandingPage = () => {
           
           <div className="pt-12 text-center sm:text-left">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-              © MMRXXVI LIBSYNC SYSTEM INFRASTRUCTURE. OPERATIONAL GLOBALLY.
+              © MMRXXVI GURUKUL SELF STUDY CENTRE SYSTEM INFRASTRUCTURE. OPERATIONAL GLOBALLY.
             </p>
           </div>
         </div>
